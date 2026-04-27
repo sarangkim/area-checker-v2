@@ -342,6 +342,15 @@
       white-space: nowrap;
     }
 
+    .ac-breakdown-table th,
+    .ac-breakdown-table td {
+      text-align: center;
+    }
+
+    .ac-breakdown-table .ac-number {
+      text-align: center !important;
+    }
+
     .ac-table th {
       background: var(--ac-panel-soft);
       color: var(--ac-muted);
@@ -1030,7 +1039,7 @@
         if (!items.length) return '<div class="ac-note">층 면적 항목이 없습니다.</div>';
 
         return [
-          '<div class="ac-table-wrap"><table class="ac-table">',
+          '<div class="ac-table-wrap"><table class="ac-table ac-breakdown-table">',
           '<thead><tr><th>구분</th><th>용도</th><th>상세</th><th class="ac-number">m²</th><th class="ac-number">평</th></tr></thead>',
           '<tbody>',
           items.map(function (item) {
