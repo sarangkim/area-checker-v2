@@ -1,0 +1,1306 @@
+<!-- Tistory embed: paste this in Tistory HTML mode. -->
+
+<style>
+    :root {
+      --ac-bg: #f6f8f7;
+      --ac-panel: #ffffff;
+      --ac-panel-soft: #eef4f1;
+      --ac-text: #15201c;
+      --ac-muted: #66756f;
+      --ac-line: #cfd9d5;
+      --ac-brand: #167a68;
+      --ac-brand-dark: #0d5c4e;
+      --ac-danger: #a33d35;
+      --ac-warning: #8a6518;
+      --ac-shadow: 0 10px 28px rgba(19, 37, 31, 0.11);
+      --ac-radius: 8px;
+      --ac-font: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+    }
+
+    .area-checker {
+      box-sizing: border-box;
+      width: 100%;
+      max-width: 860px;
+      margin: 24px auto;
+      padding: 0;
+      color: var(--ac-text);
+      font-family: var(--ac-font);
+      line-height: 1.5;
+    }
+
+    .area-checker *,
+    .area-checker *::before,
+    .area-checker *::after {
+      box-sizing: border-box;
+    }
+
+    .ac-shell {
+      overflow: hidden;
+      border: 1px solid var(--ac-line);
+      border-radius: var(--ac-radius);
+      background: var(--ac-panel);
+      box-shadow: var(--ac-shadow);
+    }
+
+    .ac-header {
+      display: grid;
+      gap: 6px;
+      padding: 22px 24px 18px;
+      border-bottom: 1px solid var(--ac-line);
+      background: linear-gradient(180deg, #ffffff 0%, #f0f6f4 100%);
+    }
+
+    .ac-title {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    .ac-subtitle {
+      margin: 0;
+      color: var(--ac-muted);
+      font-size: 14px;
+    }
+
+    .ac-form {
+      display: grid;
+      gap: 14px;
+      padding: 20px 24px;
+      background: var(--ac-panel);
+    }
+
+    .ac-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.5fr) minmax(120px, 0.5fr) minmax(120px, 0.5fr);
+      gap: 10px;
+      align-items: end;
+    }
+
+    .ac-field {
+      display: grid;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .ac-label {
+      color: var(--ac-muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .ac-input,
+    .ac-select {
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid var(--ac-line);
+      border-radius: 6px;
+      background: #ffffff;
+      color: var(--ac-text);
+      font: 15px var(--ac-font);
+      letter-spacing: 0;
+      outline: none;
+      padding: 9px 11px;
+    }
+
+    .ac-input:focus,
+    .ac-select:focus {
+      border-color: var(--ac-brand);
+      box-shadow: 0 0 0 3px rgba(22, 122, 104, 0.14);
+    }
+
+    .ac-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .ac-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      background: var(--ac-brand);
+      color: #ffffff;
+      cursor: pointer;
+      font: 700 14px var(--ac-font);
+      letter-spacing: 0;
+      padding: 9px 14px;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .ac-button:hover {
+      background: var(--ac-brand-dark);
+    }
+
+    .ac-button:disabled {
+      cursor: wait;
+      opacity: 0.62;
+    }
+
+    .ac-button.secondary {
+      border-color: var(--ac-line);
+      background: #ffffff;
+      color: var(--ac-text);
+    }
+
+    .ac-button.secondary:hover {
+      background: var(--ac-panel-soft);
+    }
+
+    .ac-status {
+      min-height: 22px;
+      color: var(--ac-muted);
+      font-size: 13px;
+    }
+
+    .ac-status.error {
+      color: var(--ac-danger);
+      font-weight: 700;
+    }
+
+    .ac-status.warn {
+      color: var(--ac-warning);
+      font-weight: 700;
+    }
+
+    .ac-loading {
+      display: grid;
+      gap: 12px;
+      place-items: center;
+      padding: 26px 18px;
+      border: 1px solid var(--ac-line);
+      border-radius: var(--ac-radius);
+      background: linear-gradient(180deg, #ffffff 0%, #eef7f4 100%);
+      text-align: center;
+      box-shadow: 0 8px 22px rgba(19, 37, 31, 0.08);
+    }
+
+    .ac-spinner {
+      width: 38px;
+      height: 38px;
+      border: 4px solid #d8e7e2;
+      border-top-color: var(--ac-brand);
+      border-radius: 50%;
+      animation: ac-spin 0.82s linear infinite;
+    }
+
+    .ac-loading-title {
+      font-size: 16px;
+      font-weight: 850;
+    }
+
+    .ac-loading-copy {
+      max-width: 420px;
+      color: var(--ac-muted);
+      font-size: 13px;
+    }
+
+    .ac-loading-bar {
+      overflow: hidden;
+      width: min(320px, 100%);
+      height: 6px;
+      border-radius: 999px;
+      background: #dce9e5;
+    }
+
+    .ac-loading-bar::before {
+      display: block;
+      width: 42%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--ac-brand), #65b9a7);
+      content: "";
+      animation: ac-slide 1.25s ease-in-out infinite;
+    }
+
+    @keyframes ac-spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes ac-slide {
+      0% { transform: translateX(-110%); }
+      50% { transform: translateX(85%); }
+      100% { transform: translateX(250%); }
+    }
+
+    .ac-results {
+      display: grid;
+      gap: 14px;
+      padding: 0 24px 24px;
+      background: var(--ac-panel);
+    }
+
+    .ac-section {
+      display: grid;
+      gap: 10px;
+      padding: 14px;
+      border: 1px solid var(--ac-line);
+      border-radius: var(--ac-radius);
+      background: #ffffff;
+      box-shadow: 0 4px 14px rgba(19, 37, 31, 0.04);
+    }
+
+    .ac-section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 0;
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    .ac-meta {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .ac-meta-item {
+      min-width: 0;
+      padding: 10px;
+      border-radius: 6px;
+      background: var(--ac-panel-soft);
+    }
+
+    .ac-meta-label {
+      color: var(--ac-muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .ac-meta-value {
+      overflow-wrap: anywhere;
+      margin-top: 2px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .ac-chip-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .ac-chip {
+      border: 1px solid var(--ac-line);
+      border-radius: 999px;
+      background: #ffffff;
+      color: var(--ac-text);
+      cursor: pointer;
+      font: 700 13px var(--ac-font);
+      min-height: 34px;
+      padding: 7px 12px;
+      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+    }
+
+    .ac-chip:hover,
+    .ac-chip.active {
+      border-color: var(--ac-brand);
+      background: #e4f3ef;
+      color: var(--ac-brand-dark);
+    }
+
+    .ac-chip:hover {
+      transform: translateY(-1px);
+    }
+
+    .ac-chip.active {
+      background: var(--ac-brand);
+      color: #ffffff;
+      box-shadow: 0 5px 13px rgba(22, 122, 104, 0.22);
+    }
+
+    .ac-table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--ac-line);
+      border-radius: 6px;
+    }
+
+    .ac-table {
+      width: 100%;
+      min-width: 520px;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .ac-table th,
+    .ac-table td {
+      padding: 9px 10px;
+      border-bottom: 1px solid var(--ac-line);
+      text-align: left;
+      vertical-align: top;
+      white-space: nowrap;
+    }
+
+    .ac-table th {
+      background: var(--ac-panel-soft);
+      color: var(--ac-muted);
+      font-weight: 800;
+    }
+
+    .ac-table tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .ac-number {
+      text-align: right !important;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .ac-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .ac-summary-box {
+      padding: 12px;
+      border-radius: 6px;
+      border: 1px solid #dce7e3;
+      background: linear-gradient(180deg, #f5faf8 0%, #eaf3f0 100%);
+    }
+
+    .ac-summary-label {
+      color: var(--ac-muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .ac-summary-value {
+      margin-top: 4px;
+      font-size: 21px;
+      font-weight: 850;
+      letter-spacing: 0;
+    }
+
+    .ac-result-heading {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .ac-selected-ho {
+      color: var(--ac-brand-dark);
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .ac-note {
+      color: var(--ac-muted);
+      font-size: 13px;
+    }
+
+    .ac-explain {
+      display: grid;
+      gap: 8px;
+      padding: 13px;
+      border: 1px solid #cfe3dc;
+      border-radius: 6px;
+      background: #f2faf7;
+    }
+
+    .ac-explain-row {
+      display: grid;
+      grid-template-columns: 70px minmax(0, 1fr);
+      gap: 10px;
+      color: var(--ac-muted);
+      font-size: 13px;
+    }
+
+    .ac-explain-row strong {
+      color: var(--ac-text);
+    }
+
+    .ac-hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 720px) {
+      .area-checker {
+        margin: 14px auto;
+      }
+
+      .ac-header,
+      .ac-form,
+      .ac-results {
+        padding-left: 14px;
+        padding-right: 14px;
+      }
+
+      .ac-grid,
+      .ac-meta,
+      .ac-summary-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .ac-title {
+        font-size: 21px;
+      }
+
+      .ac-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+  </style>
+
+<div class="area-checker" id="areaChecker">
+    <div class="ac-shell">
+      <header class="ac-header">
+        <h1 class="ac-title">건물 층·호 면적 조회</h1>
+        <p class="ac-subtitle">도로명주소를 입력한 뒤 층과 호를 선택해 전유·공용 면적을 확인합니다.</p>
+      </header>
+
+      <form class="ac-form" id="acForm">
+        <div class="ac-grid">
+          <label class="ac-field">
+            <span class="ac-label">주소</span>
+            <input class="ac-input" id="acAddress" name="address" autocomplete="street-address" placeholder="예: 서울 중구 세종대로 110">
+          </label>
+
+          <label class="ac-field">
+            <span class="ac-label">층</span>
+            <select class="ac-select" id="acFloor" name="floor">
+              <option value="">주소 조회 후 선택</option>
+            </select>
+          </label>
+
+          <label class="ac-field">
+            <span class="ac-label">호</span>
+            <input class="ac-input" id="acHo" name="ho" inputmode="numeric" placeholder="예: 1306">
+          </label>
+        </div>
+
+        <div class="ac-actions">
+          <button class="ac-button" type="submit" id="acSearchBtn">조회</button>
+          <button class="ac-button secondary" type="button" id="acFloorBtn">층 목록</button>
+          <button class="ac-button secondary" type="button" id="acResetBtn">초기화</button>
+        </div>
+
+        <div class="ac-status" id="acStatus"></div>
+      </form>
+
+      <main class="ac-results" id="acResults"></main>
+    </div>
+  </div>
+
+<script>
+    (function () {
+      "use strict";
+
+      var API_BASE = "https://area-checker-v2.vercel.app";
+      var API_PATH = "/api/area";
+
+      var form = document.getElementById("acForm");
+      var addressInput = document.getElementById("acAddress");
+      var floorSelect = document.getElementById("acFloor");
+      var hoInput = document.getElementById("acHo");
+      var searchBtn = document.getElementById("acSearchBtn");
+      var floorBtn = document.getElementById("acFloorBtn");
+      var resetBtn = document.getElementById("acResetBtn");
+      var statusEl = document.getElementById("acStatus");
+      var resultsEl = document.getElementById("acResults");
+
+      var state = {
+        floors: [],
+        lastAddress: "",
+        prefetch: null,
+      };
+
+      form.addEventListener("submit", function (event) {
+        event.preventDefault();
+        search();
+      });
+
+      floorBtn.addEventListener("click", function () {
+        loadSummary();
+      });
+
+      resetBtn.addEventListener("click", function () {
+        addressInput.value = "";
+        hoInput.value = "";
+        state.prefetch = null;
+        setFloors([]);
+        setStatus("");
+        resultsEl.innerHTML = "";
+        addressInput.focus();
+      });
+
+      floorSelect.addEventListener("change", function () {
+        if (addressInput.value.trim() && floorSelect.value && !hoInput.value.trim()) {
+          loadFloor(floorSelect.value);
+        }
+      });
+
+      function apiUrl(params) {
+        var url = new URL(API_PATH, API_BASE);
+        Object.keys(params).forEach(function (key) {
+          if (params[key] !== undefined && params[key] !== null && String(params[key]).trim() !== "") {
+            url.searchParams.set(key, String(params[key]).trim());
+          }
+        });
+        return url.toString();
+      }
+
+      async function requestArea(params) {
+        setBusy(true);
+        showLoading();
+        try {
+          var response = await fetch(apiUrl(params), { method: "GET" });
+          var data = await response.json().catch(function () {
+            return null;
+          });
+
+          if (!response.ok || !data || data.ok === false) {
+            throw new Error((data && data.message) || "조회에 실패했습니다.");
+          }
+
+          return data;
+        } finally {
+          setBusy(false);
+        }
+      }
+
+      async function loadSummary() {
+        var address = addressInput.value.trim();
+        if (!address) {
+          setStatus("주소를 먼저 입력해주세요.", "error");
+          addressInput.focus();
+          return;
+        }
+
+        setStatus("주소와 층 목록을 조회하는 중입니다.");
+        resultsEl.innerHTML = "";
+
+        try {
+          var data = await requestArea({ address: address });
+          state.lastAddress = address;
+          state.prefetch = data;
+          setFloors(data.floors || []);
+          renderSummary(data);
+          setStatus("층 목록을 불러왔습니다.");
+        } catch (error) {
+          setStatus(error.message, "error");
+        }
+      }
+
+      async function loadFloor(floor) {
+        var address = addressInput.value.trim();
+        if (!address || !floor) return;
+
+        setStatus(floor + "층 정보를 조회하는 중입니다.");
+        hoInput.value = "";
+
+        try {
+          var data = hasPrefetch(address) ? buildFloorFromPrefetch(floor) : await requestArea({ address: address, floor: floor });
+          renderFloor(data);
+          setStatus("층 정보를 불러왔습니다.");
+        } catch (error) {
+          setStatus(error.message, "error");
+        }
+      }
+
+      async function search() {
+        var address = addressInput.value.trim();
+        var floor = floorSelect.value;
+        var ho = hoInput.value.trim();
+
+        if (!address) {
+          setStatus("주소를 입력해주세요.", "error");
+          addressInput.focus();
+          return;
+        }
+
+        if (!floor && !ho) {
+          await loadSummary();
+          return;
+        }
+
+        if (!floor && state.lastAddress !== address) {
+          await loadSummary();
+          floor = floorSelect.value;
+        }
+
+        setStatus("면적 데이터를 조회하는 중입니다.");
+
+        try {
+          var data = hasPrefetch(address)
+            ? (ho ? buildHoFromPrefetch(floor, ho) : buildFloorFromPrefetch(floor))
+            : await requestArea({ address: address, floor: floor, ho: ho });
+          if (data.mode === "floor") renderFloor(data);
+          else if (data.mode === "ho_breakdown") renderHoBreakdown(data);
+          else renderFallback(data);
+          setStatus("조회가 완료되었습니다.");
+        } catch (error) {
+          setStatus(error.message, "error");
+        }
+      }
+
+      function setFloors(floors) {
+        state.floors = floors || [];
+        floorSelect.innerHTML = "";
+
+        var first = document.createElement("option");
+        first.value = "";
+        first.textContent = state.floors.length ? "층 선택" : "주소 조회 후 선택";
+        floorSelect.appendChild(first);
+
+        state.floors.forEach(function (floor) {
+          var option = document.createElement("option");
+          option.value = floor.key || floor.no;
+          option.textContent = floor.label || (floor.gb + " " + floor.no + "층");
+          floorSelect.appendChild(option);
+        });
+      }
+
+      function setStatus(message, type) {
+        statusEl.className = "ac-status" + (type ? " " + type : "");
+        statusEl.textContent = message || "";
+      }
+
+      function setBusy(isBusy) {
+        searchBtn.disabled = isBusy;
+        floorBtn.disabled = isBusy;
+      }
+
+      function showLoading() {
+        resultsEl.innerHTML = [
+          '<section class="ac-loading" aria-live="polite">',
+          '<div class="ac-spinner" aria-hidden="true"></div>',
+          '<div class="ac-loading-title">공공데이터를 불러오는 중입니다</div>',
+          '<div class="ac-loading-copy">데이터 양에 따라 5초에서 20초 정도 걸립니다. 한 번 불러온 뒤에는 층과 호를 빠르게 확인할 수 있습니다.</div>',
+          '<div class="ac-loading-bar" aria-hidden="true"></div>',
+          '</section>'
+        ].join("");
+      }
+
+      function hasPrefetch(address) {
+        return !!(
+          state.prefetch &&
+          state.lastAddress === address &&
+          state.prefetch.all_data &&
+          Array.isArray(state.prefetch.all_data.floor_items)
+        );
+      }
+
+      function buildFloorFromPrefetch(floor) {
+        var base = state.prefetch || {};
+        var all = base.all_data || {};
+        var floorItems = (all.floor_items || []).filter(function (item) {
+          return sameFloorItem(item, floor);
+        });
+        var pubItems = all.pub_items || [];
+        var exposItems = all.expos_items || [];
+        var hoIndex = buildHoIndex(exposItems, pubItems, floor);
+        var hoList = Object.keys(hoIndex).sort(function (a, b) {
+          return Number(a) - Number(b);
+        });
+        var floorExclusive = findFloorExclusiveFromItems(pubItems, floor);
+
+        return {
+          ok: true,
+          build: base.build,
+          mode: "floor",
+          input: { address: addressInput.value.trim(), floor: floor, ho: null },
+          road: base.road || "",
+          jibun: base.jibun || "",
+          keys: base.keys || {},
+          floor_nos: base.floor_nos || [],
+          floor_items: floorItems.map(toClientFloorItem),
+          ho_list: hoList,
+          ho_list_note: hoList.length ? "" : "해당 층에서 호 목록을 찾지 못했습니다.",
+          ho_index: hoIndex,
+          floor_exclusive_m2: floorExclusive ? floorExclusive.m2 : null,
+          floor_exclusive_pyeong: floorExclusive ? round2(floorExclusive.m2 / 3.305785) : null,
+          floor_exclusive_note: floorExclusive ? floorExclusive.note : null
+        };
+      }
+
+      function buildHoFromPrefetch(floor, ho) {
+        var base = state.prefetch || {};
+        var all = base.all_data || {};
+        var wantHoNorm = normalizeHo(ho);
+        var hoRows = findRowsByFloorAndHo(all.pub_items || [], floor, wantHoNorm);
+
+        if (hoRows.length) {
+          return buildHoBreakdownLocal(base, floor, ho, wantHoNorm, hoRows);
+        }
+
+        var target = findRowsByFloorAndHo(all.expos_items || [], floor, wantHoNorm)[0] || null;
+        var areaM2 = target ? toNumber(target.area) : 0;
+
+        if (areaM2 > 0) {
+          return {
+            ok: true,
+            build: base.build,
+            mode: "exposInfo_fallback",
+            input: { address: addressInput.value.trim(), floor: floor, ho: ho },
+            road: base.road || "",
+            jibun: base.jibun || "",
+            keys: base.keys || {},
+            sum: {
+              exclusive_m2: areaM2,
+              exclusive_pyeong: round2(areaM2 / 3.305785),
+              shared_m2: null,
+              shared_pyeong: null,
+              total_m2: areaM2,
+              total_pyeong: round2(areaM2 / 3.305785)
+            },
+            note: "전유/공용 breakdown 데이터가 없어서 전유부(getBrExposInfo) 면적으로 안내합니다."
+          };
+        }
+
+        var floorExclusive = findFloorExclusiveFromItems(all.pub_items || [], floor);
+        if (floorExclusive) {
+          return {
+            ok: true,
+            build: base.build,
+            mode: "floorExclusive_fallback",
+            input: { address: addressInput.value.trim(), floor: floor, ho: ho },
+            road: base.road || "",
+            jibun: base.jibun || "",
+            keys: base.keys || {},
+            sum: {
+              exclusive_m2: floorExclusive.m2,
+              exclusive_pyeong: round2(floorExclusive.m2 / 3.305785),
+              shared_m2: null,
+              shared_pyeong: null,
+              total_m2: floorExclusive.m2,
+              total_pyeong: round2(floorExclusive.m2 / 3.305785)
+            },
+            note: "해당 호 데이터가 공공API에서 누락되어, 같은 층의 전유 면적으로 안내합니다.",
+            floor_exclusive_note: floorExclusive.note
+          };
+        }
+
+        throw new Error("해당 층/호 면적 데이터를 공공API에서 찾지 못했습니다.");
+      }
+
+      function buildHoIndex(exposItems, pubItems, floor) {
+        var hoIndex = {};
+
+        function addHo(hoNm, source) {
+          var raw = String(hoNm || "").trim();
+          if (!raw) return;
+
+          var expanded = expandHoRange(raw);
+          var norms = expanded.length ? expanded.map(String) : [normalizeHo(raw)].filter(Boolean);
+
+          norms.forEach(function (norm) {
+            if (!hoIndex[norm]) {
+              hoIndex[norm] = {
+                norm: norm,
+                samples: [],
+                hasExclusive: false,
+                exclusive_m2: 0,
+                shared_m2: 0,
+                total_m2: 0,
+                sources: [],
+                mergedFrom: expanded.length >= 2 ? raw : null
+              };
+            }
+            if (hoIndex[norm].sources.indexOf(source) === -1) hoIndex[norm].sources.push(source);
+            if (hoIndex[norm].samples.indexOf(raw) === -1) hoIndex[norm].samples.push(raw);
+            if (!hoIndex[norm].mergedFrom && expanded.length >= 2) hoIndex[norm].mergedFrom = raw;
+          });
+        }
+
+        exposItems.filter(function (item) {
+          return sameFloorItem(item, floor);
+        }).forEach(function (item) {
+          addHo(item.hoNm, "exposInfo");
+        });
+
+        pubItems.filter(function (item) {
+          return sameFloorItem(item, floor);
+        }).forEach(function (item) {
+          addHo(item.hoNm, "pubuseArea");
+
+          var raw = String(item.hoNm || "").trim();
+          var expanded = expandHoRange(raw);
+          var norms = expanded.length ? expanded.map(String) : [normalizeHo(raw)].filter(Boolean);
+          var area = toNumber(item.area);
+
+          norms.forEach(function (norm) {
+            if (!hoIndex[norm]) return;
+            if (isExclusiveItem(item)) {
+              hoIndex[norm].hasExclusive = true;
+              hoIndex[norm].exclusive_m2 += area;
+            }
+            if (isSharedItem(item)) hoIndex[norm].shared_m2 += area;
+          });
+        });
+
+        Object.keys(hoIndex).forEach(function (key) {
+          var item = hoIndex[key];
+          item.exclusive_m2 = round2(item.exclusive_m2);
+          item.shared_m2 = round2(item.shared_m2);
+          item.total_m2 = round2(item.exclusive_m2 + item.shared_m2);
+          item.exclusive_pyeong = item.exclusive_m2 ? round2(item.exclusive_m2 / 3.305785) : null;
+          item.shared_pyeong = item.shared_m2 ? round2(item.shared_m2 / 3.305785) : null;
+          item.total_pyeong = item.total_m2 ? round2(item.total_m2 / 3.305785) : null;
+        });
+
+        return hoIndex;
+      }
+
+      function buildHoBreakdownLocal(base, floor, ho, wantHoNorm, hoRows) {
+        var breakdown = hoRows.map(function (row) {
+          var areaM2 = toNumber(row.area);
+          return {
+            gb: row.exposPubuseGbCdNm || codeToGb(row.exposPubuseGbCd),
+            flrNm: row.flrNoNm || "",
+            use: row.mainPurpsCdNm || row.etcPurps || "",
+            area_m2: areaM2,
+            area_pyeong: round2(areaM2 / 3.305785),
+            raw: { flrNo: row.flrNo || "", hoNm: row.hoNm || "" }
+          };
+        });
+        var exclusiveM2 = round2(hoRows.filter(isExclusiveItem).reduce(function (sum, row) {
+          return sum + toNumber(row.area);
+        }, 0));
+        var sharedM2 = round2(hoRows.filter(isSharedItem).reduce(function (sum, row) {
+          return sum + toNumber(row.area);
+        }, 0));
+        var totalM2 = round2(exclusiveM2 + sharedM2);
+        var samples = unique(hoRows.map(function (row) {
+          return String(row.hoNm || "").trim();
+        }).filter(Boolean));
+        var merged = samples.filter(function (sample) {
+          return expandHoRange(sample).length >= 2;
+        });
+
+        return {
+          ok: true,
+          build: base.build,
+          mode: "ho_breakdown",
+          input: { address: addressInput.value.trim(), floor: floor, ho: ho },
+          road: base.road || "",
+          jibun: base.jibun || "",
+          keys: base.keys || {},
+          ho_matched: {
+            want: ho,
+            wantHoNorm: wantHoNorm,
+            merged: merged.length > 0,
+            matchedHoNm: merged[0] || samples[0] || null,
+            range: merged[0] ? expandHoRange(merged[0]) : null
+          },
+          breakdown: breakdown,
+          sum: {
+            exclusive_m2: exclusiveM2 || null,
+            exclusive_pyeong: exclusiveM2 ? round2(exclusiveM2 / 3.305785) : null,
+            shared_m2: sharedM2 || null,
+            shared_pyeong: sharedM2 ? round2(sharedM2 / 3.305785) : null,
+            total_m2: totalM2 || null,
+            total_pyeong: totalM2 ? round2(totalM2 / 3.305785) : null
+          },
+          note: "주소 조회 시 미리 가져온 데이터 기준으로 호별 전유/공용을 구성했습니다."
+        };
+      }
+
+
+      function renderSummary(data) {
+        resultsEl.innerHTML = [
+          renderAddressMeta(data),
+          '<section class="ac-section">',
+          '<h2 class="ac-section-title">층 목록</h2>',
+          renderFloorChips(data.floors || []),
+          '</section>'
+        ].join("");
+        bindFloorChips();
+      }
+
+      function renderFloor(data) {
+        if (data.input && data.input.floor) floorSelect.value = data.input.floor;
+
+        resultsEl.innerHTML = [
+          renderAddressMeta(data),
+          '<section class="ac-section">',
+          '<h2 class="ac-section-title">층 정보</h2>',
+          renderFloorItems(data.floor_items || []),
+          renderFloorExclusive(data),
+          '</section>',
+          '<section class="ac-section">',
+          '<h2 class="ac-section-title">호 목록</h2>',
+          renderHoChips(data.ho_list || []),
+          data.ho_list_note ? '<div class="ac-note">' + esc(data.ho_list_note) + '</div>' : '',
+          '</section>'
+        ].join("");
+        bindHoChips();
+      }
+
+      function renderHoBreakdown(data) {
+        if (data.input && data.input.floor) floorSelect.value = data.input.floor;
+        var floorData = hasPrefetch(addressInput.value.trim()) ? buildFloorFromPrefetch(data.input.floor) : null;
+
+        resultsEl.innerHTML = [
+          renderAddressMeta(data),
+          '<section class="ac-section">',
+          '<div class="ac-result-heading"><h2 class="ac-section-title">면적 합계</h2>',
+          '<span class="ac-selected-ho">' + esc((data.input && data.input.ho ? data.input.ho : hoInput.value) + "호") + '</span></div>',
+          renderSum(data.sum || {}),
+          renderAreaGuide(data.sum || {}),
+          data.ho_matched && data.ho_matched.note ? '<div class="ac-note">' + esc(data.ho_matched.note) + '</div>' : '',
+          '</section>',
+          '<section class="ac-section">',
+          '<h2 class="ac-section-title">전유·공용 breakdown</h2>',
+          renderBreakdown(data.breakdown || []),
+          '<div class="ac-note">' + esc(data.note || '') + '</div>',
+          '</section>',
+          renderStickyHoList(floorData, data.input && data.input.ho)
+        ].join("");
+        bindHoChips();
+      }
+
+      function renderFallback(data) {
+        if (data.input && data.input.floor) floorSelect.value = data.input.floor;
+        var floorData = hasPrefetch(addressInput.value.trim()) ? buildFloorFromPrefetch(data.input.floor) : null;
+
+        resultsEl.innerHTML = [
+          renderAddressMeta(data),
+          '<section class="ac-section">',
+          '<div class="ac-result-heading"><h2 class="ac-section-title">면적 결과</h2>',
+          '<span class="ac-selected-ho">' + esc((data.input && data.input.ho ? data.input.ho : hoInput.value) + "호") + '</span></div>',
+          renderSum(data.sum || {}),
+          data.note ? '<div class="ac-note">' + esc(data.note) + '</div>' : '',
+          data.floor_exclusive_note ? '<div class="ac-note">' + esc(data.floor_exclusive_note) + '</div>' : '',
+          '</section>',
+          renderStickyHoList(floorData, data.input && data.input.ho)
+        ].join("");
+        bindHoChips();
+      }
+
+      function renderAddressMeta(data) {
+        return [
+          '<section class="ac-section">',
+          '<h2 class="ac-section-title">주소</h2>',
+          '<div class="ac-meta">',
+          metaItem("도로명", data.road || "-"),
+          metaItem("지번", data.jibun || "-"),
+          '</div>',
+          '</section>'
+        ].join("");
+      }
+
+      function renderFloorChips(floors) {
+        if (!floors.length) return '<div class="ac-note">조회된 층이 없습니다.</div>';
+
+        return '<div class="ac-chip-list">' + floors.map(function (floor) {
+          return '<button class="ac-chip" type="button" data-floor="' + escAttr(floor.key || floor.no) + '">' +
+            esc(floor.label || (floor.gb + " " + floor.no + "층")) +
+            '</button>';
+        }).join("") + '</div>';
+      }
+
+      function renderStickyHoList(floorData, activeHo) {
+        if (!floorData) return "";
+        return [
+          '<section class="ac-section">',
+          '<h2 class="ac-section-title">같은 층 호 목록</h2>',
+          renderHoChips(floorData.ho_list || [], activeHo),
+          floorData.ho_list_note ? '<div class="ac-note">' + esc(floorData.ho_list_note) + '</div>' : '',
+          '</section>'
+        ].join("");
+      }
+
+      function renderHoChips(hoList, activeHo) {
+        if (!hoList.length) return '<div class="ac-note">조회된 호 목록이 없습니다. 호를 직접 입력해 조회할 수 있습니다.</div>';
+        var activeNorm = normalizeHo(activeHo || hoInput.value);
+
+        return '<div class="ac-chip-list">' + hoList.map(function (ho) {
+          var active = activeNorm && normalizeHo(ho) === activeNorm ? " active" : "";
+          return '<button class="ac-chip' + active + '" type="button" data-ho="' + escAttr(ho) + '">' + esc(ho + "호") + '</button>';
+        }).join("") + '</div>';
+      }
+
+      function renderFloorItems(items) {
+        if (!items.length) return '<div class="ac-note">층 면적 항목이 없습니다.</div>';
+
+        return [
+          '<div class="ac-table-wrap"><table class="ac-table">',
+          '<thead><tr><th>구분</th><th>용도</th><th>상세</th><th class="ac-number">m²</th><th class="ac-number">평</th></tr></thead>',
+          '<tbody>',
+          items.map(function (item) {
+            return '<tr>' +
+              '<td>' + esc(item.gb) + '</td>' +
+              '<td>' + esc(item.use) + '</td>' +
+              '<td>' + esc(item.detail) + '</td>' +
+              '<td class="ac-number">' + fmt(item.area_m2) + '</td>' +
+              '<td class="ac-number">' + fmt(item.area_pyeong) + '</td>' +
+              '</tr>';
+          }).join(""),
+          '</tbody></table></div>'
+        ].join("");
+      }
+
+      function renderFloorExclusive(data) {
+        if (!data.floor_exclusive_m2) return "";
+
+        return [
+          '<div class="ac-summary-grid">',
+          summaryBox("층 전유", data.floor_exclusive_m2, "m²"),
+          summaryBox("층 전유", data.floor_exclusive_pyeong, "평"),
+          summaryBox("기준", data.floor_exclusive_note || "-", ""),
+          '</div>'
+        ].join("");
+      }
+
+      function renderSum(sum) {
+        return [
+          '<div class="ac-summary-grid">',
+          summaryBox("전유", sum.exclusive_m2, "m²"),
+          summaryBox("공용", sum.shared_m2, "m²"),
+          summaryBox("합계", sum.total_m2, "m²"),
+          summaryBox("전유", sum.exclusive_pyeong, "평"),
+          summaryBox("공용", sum.shared_pyeong, "평"),
+          summaryBox("합계", sum.total_pyeong, "평"),
+          '</div>'
+        ].join("");
+      }
+
+      function renderAreaGuide(sum) {
+        return [
+          '<div class="ac-explain">',
+          '<div class="ac-explain-row"><strong>전유</strong><span>해당 호실 내부에서 독점 사용하는 면적입니다. 현재 ' + esc(formatValue(sum.exclusive_m2, "m²")) + '입니다.</span></div>',
+          '<div class="ac-explain-row"><strong>공용</strong><span>복도, 계단, 승강기홀 등 건물 공용부 중 이 호실에 배분된 면적의 합계입니다. 현재 ' + esc(formatValue(sum.shared_m2, "m²")) + '입니다.</span></div>',
+          '<div class="ac-explain-row"><strong>합계</strong><span>전유와 공용을 더한 면적입니다. 아래 표의 공용 여러 줄은 원장에 분리 기록된 공용 항목입니다.</span></div>',
+          '</div>'
+        ].join("");
+      }
+
+      function renderBreakdown(rows) {
+        if (!rows.length) return '<div class="ac-note">breakdown 항목이 없습니다.</div>';
+
+        return [
+          '<div class="ac-table-wrap"><table class="ac-table">',
+          '<thead><tr><th>구분</th><th>층</th><th>용도</th><th>해석</th><th class="ac-number">m²</th><th class="ac-number">평</th></tr></thead>',
+          '<tbody>',
+          rows.map(function (row) {
+            return '<tr>' +
+              '<td>' + esc(row.gb || "-") + '</td>' +
+              '<td>' + esc(row.flrNm || "-") + '</td>' +
+              '<td>' + esc(row.use || "-") + '</td>' +
+              '<td>' + esc(explainBreakdownRow(row)) + '</td>' +
+              '<td class="ac-number">' + fmt(row.area_m2) + '</td>' +
+              '<td class="ac-number">' + fmt(row.area_pyeong) + '</td>' +
+              '</tr>';
+          }).join(""),
+          '</tbody></table></div>'
+        ].join("");
+      }
+
+      function explainBreakdownRow(row) {
+        var gb = String(row.gb || "");
+        var use = String(row.use || "");
+        if (gb.indexOf("전유") !== -1) return "호실 내부 전용";
+        if (gb.indexOf("공용") !== -1 && use && use !== "-") return "이 호실에 배분된 공용";
+        if (gb.indexOf("공용") !== -1) return "공용 상세 미제공";
+        return "원장 항목";
+      }
+
+      function bindFloorChips() {
+        resultsEl.querySelectorAll("[data-floor]").forEach(function (button) {
+          button.addEventListener("click", function () {
+            floorSelect.value = button.getAttribute("data-floor");
+            loadFloor(floorSelect.value);
+          });
+        });
+      }
+
+      function bindHoChips() {
+        resultsEl.querySelectorAll("[data-ho]").forEach(function (button) {
+          button.addEventListener("click", function () {
+            hoInput.value = button.getAttribute("data-ho");
+            search();
+          });
+        });
+      }
+
+      function metaItem(label, value) {
+        return '<div class="ac-meta-item"><div class="ac-meta-label">' + esc(label) + '</div><div class="ac-meta-value">' + esc(value) + '</div></div>';
+      }
+
+      function summaryBox(label, value, suffix) {
+        return '<div class="ac-summary-box"><div class="ac-summary-label">' + esc(label) + '</div><div class="ac-summary-value">' + esc(formatValue(value, suffix)) + '</div></div>';
+      }
+
+      function formatValue(value, suffix) {
+        if (value === null || value === undefined || value === "" || value === "-") return "-";
+        if (typeof value === "number") return fmt(value) + (suffix ? " " + suffix : "");
+        return String(value);
+      }
+
+      function fmt(value) {
+        if (value === null || value === undefined || value === "") return "-";
+        var number = Number(value);
+        if (!Number.isFinite(number)) return String(value);
+        return number.toLocaleString("ko-KR", {
+          minimumFractionDigits: number % 1 === 0 ? 0 : 2,
+          maximumFractionDigits: 2
+        });
+      }
+
+      function esc(value) {
+        return String(value == null ? "" : value)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      function escAttr(value) {
+        return esc(value).replace(/`/g, "&#096;");
+      }
+
+      function toNumber(value) {
+        var n = Number(String(value || "").trim());
+        return Number.isFinite(n) ? n : 0;
+      }
+
+      function round2(value) {
+        return Number(Number(value || 0).toFixed(2));
+      }
+
+      function normalizeHo(value) {
+        var match = String(value || "").match(/\d+/);
+        return match ? match[0] : "";
+      }
+
+      function normalizeFloor(value) {
+        var match = String(value || "").match(/-?\d+/);
+        return match ? String(Number(match[0])) : "";
+      }
+
+      function parseFloorInput(value) {
+        var raw = String(value || "").trim();
+        var no = normalizeFloor(raw);
+        var gb = null;
+        if (raw.indexOf("지하") !== -1 || /^B/i.test(raw)) gb = "지하";
+        if (raw.indexOf("지상") !== -1 || /^F/i.test(raw)) gb = "지상";
+        return { gb: gb, no: no, key: gb && no ? gb + ":" + no : no };
+      }
+
+      function floorGbFromItem(item) {
+        var code = String(item.flrGbCd || "").trim();
+        var text = String((item.flrGbCdNm || "") + " " + (item.flrNoNm || ""));
+        if (code === "10" || text.indexOf("지하") !== -1 || Number(item.flrNo) < 0) return "지하";
+        if (code === "20" || text.indexOf("지상") !== -1) return "지상";
+        return normalizeFloor(item.flrNo || "") ? "지상" : "";
+      }
+
+      function sameFloorItem(item, floor) {
+        var spec = typeof floor === "object" ? floor : parseFloorInput(floor);
+        if (String(normalizeFloor(item.flrNo || "")) !== String(spec.no || "")) return false;
+        if (!spec.gb) return true;
+        return floorGbFromItem(item) === spec.gb;
+      }
+
+      function expandHoRange(hoNm) {
+        var raw = String(hoNm || "").replace(/\s/g, "").replace(/호/g, "").replace(/[–—−]/g, "-");
+        if (!raw) return [];
+
+        var range = raw.match(/(\d+)\s*[~-]\s*(\d+)/);
+        if (range) {
+          var start = Number(range[1]);
+          var end = Number(range[2]);
+          var out = [];
+          if (start > 0 && end >= start && end - start <= 30) {
+            for (var i = start; i <= end; i += 1) out.push(i);
+            return out;
+          }
+        }
+
+        if (raw.indexOf(",") !== -1) {
+          return raw.split(",").map(function (part) {
+            return Number(part.replace(/[^\d]/g, ""));
+          }).filter(function (n) {
+            return n > 0;
+          });
+        }
+
+        var single = Number(raw.replace(/[^\d]/g, ""));
+        return single ? [single] : [];
+      }
+
+      function hoInMergedHoNm(itemHoNm, wantHoNorm) {
+        var want = Number(String(wantHoNorm || "").replace(/[^\d]/g, ""));
+        if (!want) return false;
+        return expandHoRange(itemHoNm).indexOf(want) !== -1;
+      }
+
+      function findRowsByFloorAndHo(items, floor, wantHoNorm) {
+        var exact = items.filter(function (item) {
+          return sameFloorItem(item, floor) && normalizeHo(item.hoNm || "") === wantHoNorm;
+        });
+        if (exact.length) return exact;
+
+        return items.filter(function (item) {
+          var raw = String(item.hoNm || "").trim();
+          return sameFloorItem(item, floor) && raw && hoInMergedHoNm(raw, wantHoNorm);
+        });
+      }
+
+      function toClientFloorItem(item) {
+        var areaM2 = toNumber(item.area);
+        return {
+          gb: item.flrGbCdNm || "-",
+          use: item.mainPurpsCdNm || "-",
+          detail: item.etcPurps || "-",
+          flrNo: item.flrNo || "",
+          flrNoNm: item.flrNoNm || "",
+          area_m2: areaM2,
+          area_pyeong: round2(areaM2 / 3.305785)
+        };
+      }
+
+      function isExclusiveItem(item) {
+        return String(item.exposPubuseGbCd || "") === "1" || String(item.exposPubuseGbCdNm || "").indexOf("전유") !== -1;
+      }
+
+      function isSharedItem(item) {
+        return String(item.exposPubuseGbCd || "") === "2" || String(item.exposPubuseGbCdNm || "").indexOf("공용") !== -1;
+      }
+
+      function codeToGb(code) {
+        if (String(code || "") === "1") return "전유";
+        if (String(code || "") === "2") return "공용";
+        return String(code || "");
+      }
+
+      function findFloorExclusiveFromItems(pubItems, floor) {
+        var candidates = pubItems.filter(function (item) {
+          if (!sameFloorItem(item, floor)) return false;
+          if (!isExclusiveItem(item)) return false;
+          var hoRaw = String(item.hoNm || "").trim();
+          return !hoRaw || !normalizeHo(hoRaw);
+        }).sort(function (a, b) {
+          return toNumber(b.area) - toNumber(a.area);
+        });
+
+        if (!candidates.length || !toNumber(candidates[0].area)) return null;
+
+        return {
+          m2: toNumber(candidates[0].area),
+          note: "getBrExposPubuseAreaInfo: flrNo=" + (candidates[0].flrNo || "") + ', hoNm="' + (candidates[0].hoNm || "") + '"'
+        };
+      }
+
+      function unique(values) {
+        var seen = {};
+        return values.filter(function (value) {
+          if (seen[value]) return false;
+          seen[value] = true;
+          return true;
+        });
+      }
+    })();
+  </script>
