@@ -171,6 +171,66 @@
       font-weight: 700;
     }
 
+    .ac-loading {
+      display: grid;
+      gap: 12px;
+      place-items: center;
+      padding: 26px 18px;
+      border: 1px solid var(--ac-line);
+      border-radius: var(--ac-radius);
+      background: linear-gradient(180deg, #ffffff 0%, #eef7f4 100%);
+      text-align: center;
+      box-shadow: 0 8px 22px rgba(19, 37, 31, 0.08);
+    }
+
+    .ac-spinner {
+      width: 38px;
+      height: 38px;
+      border: 4px solid #d8e7e2;
+      border-top-color: var(--ac-brand);
+      border-radius: 50%;
+      animation: ac-spin 0.82s linear infinite;
+    }
+
+    .ac-loading-title {
+      font-size: 16px;
+      font-weight: 850;
+    }
+
+    .ac-loading-copy {
+      max-width: 420px;
+      color: var(--ac-muted);
+      font-size: 13px;
+    }
+
+    .ac-loading-bar {
+      overflow: hidden;
+      width: min(320px, 100%);
+      height: 6px;
+      border-radius: 999px;
+      background: #dce9e5;
+    }
+
+    .ac-loading-bar::before {
+      display: block;
+      width: 42%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--ac-brand), #65b9a7);
+      content: "";
+      animation: ac-slide 1.25s ease-in-out infinite;
+    }
+
+    @keyframes ac-spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes ac-slide {
+      0% { transform: translateX(-110%); }
+      50% { transform: translateX(85%); }
+      100% { transform: translateX(250%); }
+    }
+
     .ac-results {
       display: grid;
       gap: 14px;
@@ -342,6 +402,27 @@
       font-size: 13px;
     }
 
+    .ac-explain {
+      display: grid;
+      gap: 8px;
+      padding: 13px;
+      border: 1px solid #cfe3dc;
+      border-radius: 6px;
+      background: #f2faf7;
+    }
+
+    .ac-explain-row {
+      display: grid;
+      grid-template-columns: 70px minmax(0, 1fr);
+      gap: 10px;
+      color: var(--ac-muted);
+      font-size: 13px;
+    }
+
+    .ac-explain-row strong {
+      color: var(--ac-text);
+    }
+
     .ac-hidden {
       display: none !important;
     }
@@ -476,6 +557,7 @@
 
       async function requestArea(params) {
         setBusy(true);
+        showLoading();
         try {
           var response = await fetch(apiUrl(params), { method: "GET" });
           var data = await response.json().catch(function () {
@@ -592,6 +674,17 @@
       function setBusy(isBusy) {
         searchBtn.disabled = isBusy;
         floorBtn.disabled = isBusy;
+      }
+
+      function showLoading() {
+        resultsEl.innerHTML = [
+          '<section class="ac-loading" aria-live="polite">',
+          '<div class="ac-spinner" aria-hidden="true"></div>',
+          '<div class="ac-loading-title">공공데이터를 불러오는 중입니다</div>',
+          '<div class="ac-loading-copy">데이터 양에 따라 5초에서 20초 정도 걸립니다. 한 번 불러온 뒤에는 층과 호를 빠르게 확인할 수 있습니다.</div>',
+          '<div class="ac-loading-bar" aria-hidden="true"></div>',
+          '</section>'
+        ].join("");
       }
 
       function hasPrefetch(address) {
@@ -859,6 +952,7 @@
           '<div class="ac-result-heading"><h2 class="ac-section-title">면적 합계</h2>',
           '<span class="ac-selected-ho">' + esc((data.input && data.input.ho ? data.input.ho : hoInput.value) + "호") + '</span></div>',
           renderSum(data.sum || {}),
+          renderAreaGuide(data.sum || {}),
           data.ho_matched && data.ho_matched.note ? '<div class="ac-note">' + esc(data.ho_matched.note) + '</div>' : '',
           '</section>',
           '<section class="ac-section">',
@@ -977,24 +1071,44 @@
         ].join("");
       }
 
+      function renderAreaGuide(sum) {
+        return [
+          '<div class="ac-explain">',
+          '<div class="ac-explain-row"><strong>전유</strong><span>해당 호실 내부에서 독점 사용하는 면적입니다. 현재 ' + esc(formatValue(sum.exclusive_m2, "m²")) + '입니다.</span></div>',
+          '<div class="ac-explain-row"><strong>공용</strong><span>복도, 계단, 승강기홀 등 건물 공용부 중 이 호실에 배분된 면적의 합계입니다. 현재 ' + esc(formatValue(sum.shared_m2, "m²")) + '입니다.</span></div>',
+          '<div class="ac-explain-row"><strong>합계</strong><span>전유와 공용을 더한 면적입니다. 아래 표의 공용 여러 줄은 원장에 분리 기록된 공용 항목입니다.</span></div>',
+          '</div>'
+        ].join("");
+      }
+
       function renderBreakdown(rows) {
         if (!rows.length) return '<div class="ac-note">breakdown 항목이 없습니다.</div>';
 
         return [
           '<div class="ac-table-wrap"><table class="ac-table">',
-          '<thead><tr><th>구분</th><th>층</th><th>용도</th><th class="ac-number">m²</th><th class="ac-number">평</th></tr></thead>',
+          '<thead><tr><th>구분</th><th>층</th><th>용도</th><th>해석</th><th class="ac-number">m²</th><th class="ac-number">평</th></tr></thead>',
           '<tbody>',
           rows.map(function (row) {
             return '<tr>' +
               '<td>' + esc(row.gb || "-") + '</td>' +
               '<td>' + esc(row.flrNm || "-") + '</td>' +
               '<td>' + esc(row.use || "-") + '</td>' +
+              '<td>' + esc(explainBreakdownRow(row)) + '</td>' +
               '<td class="ac-number">' + fmt(row.area_m2) + '</td>' +
               '<td class="ac-number">' + fmt(row.area_pyeong) + '</td>' +
               '</tr>';
           }).join(""),
           '</tbody></table></div>'
         ].join("");
+      }
+
+      function explainBreakdownRow(row) {
+        var gb = String(row.gb || "");
+        var use = String(row.use || "");
+        if (gb.indexOf("전유") !== -1) return "호실 내부 전용";
+        if (gb.indexOf("공용") !== -1 && use && use !== "-") return "이 호실에 배분된 공용";
+        if (gb.indexOf("공용") !== -1) return "공용 상세 미제공";
+        return "원장 항목";
       }
 
       function bindFloorChips() {
