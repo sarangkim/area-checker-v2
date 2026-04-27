@@ -2,9 +2,9 @@
 // Vercel Serverless Function
 // env: JUSO_KEY, BLD_KEY
 
-const BUILD = "2026-04-27-HO-ROWS-9999-01";
-const ROWS_PER_PAGE = 9999;
-const MAX_PAGES = 20;
+const BUILD = "2026-04-27-HO-PAGING-100-ALL-01";
+const BLD_PAGE_SIZE = 100;
+const MAX_PAGES = 100;
 const PYEONG_M2 = 3.305785;
 
 module.exports = async (req, res) => {
@@ -276,7 +276,7 @@ async function fetchBldItems(apiName, keys) {
     url.searchParams.set("bjdongCd", keys.bjdongCd);
     url.searchParams.set("bun", keys.bun);
     url.searchParams.set("ji", keys.ji);
-    url.searchParams.set("numOfRows", String(ROWS_PER_PAGE));
+    url.searchParams.set("numOfRows", String(BLD_PAGE_SIZE));
     url.searchParams.set("pageNo", String(pageNo));
 
     const response = await fetch(url.toString());
@@ -293,8 +293,8 @@ async function fetchBldItems(apiName, keys) {
     }
 
     if (!items.length) break;
-    if (allItems.length >= totalCount) break;
-    if (items.length < ROWS_PER_PAGE) break;
+    if (totalCount > 0 && allItems.length >= totalCount) break;
+    if (!totalCount && items.length < BLD_PAGE_SIZE) break;
 
     pageNo += 1;
   }
