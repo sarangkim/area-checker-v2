@@ -2,7 +2,7 @@
 // Vercel Serverless Function
 // env: JUSO_KEY, BLD_KEY
 
-const BUILD = "2026-01-01-MERGED-HO-PAGING-FIX-01";
+const BUILD = "2026-04-27-HO-ROWS-9999-01";
 const ROWS_PER_PAGE = 9999;
 const MAX_PAGES = 20;
 const PYEONG_M2 = 3.305785;
