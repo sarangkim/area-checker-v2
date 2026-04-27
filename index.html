@@ -185,6 +185,7 @@
       border: 1px solid var(--ac-line);
       border-radius: var(--ac-radius);
       background: #ffffff;
+      box-shadow: 0 4px 14px rgba(19, 37, 31, 0.04);
     }
 
     .ac-section-title {
@@ -227,7 +228,7 @@
     .ac-chip-list {
       display: flex;
       flex-wrap: wrap;
-      gap: 6px;
+      gap: 8px;
     }
 
     .ac-chip {
@@ -237,7 +238,9 @@
       color: var(--ac-text);
       cursor: pointer;
       font: 700 13px var(--ac-font);
-      padding: 6px 10px;
+      min-height: 34px;
+      padding: 7px 12px;
+      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
     }
 
     .ac-chip:hover,
@@ -245,6 +248,16 @@
       border-color: var(--ac-brand);
       background: #e4f3ef;
       color: var(--ac-brand-dark);
+    }
+
+    .ac-chip:hover {
+      transform: translateY(-1px);
+    }
+
+    .ac-chip.active {
+      background: var(--ac-brand);
+      color: #ffffff;
+      box-shadow: 0 5px 13px rgba(22, 122, 104, 0.22);
     }
 
     .ac-table-wrap {
@@ -293,7 +306,8 @@
     .ac-summary-box {
       padding: 12px;
       border-radius: 6px;
-      background: var(--ac-panel-soft);
+      border: 1px solid #dce7e3;
+      background: linear-gradient(180deg, #f5faf8 0%, #eaf3f0 100%);
     }
 
     .ac-summary-label {
@@ -304,9 +318,23 @@
 
     .ac-summary-value {
       margin-top: 4px;
-      font-size: 19px;
+      font-size: 21px;
       font-weight: 850;
       letter-spacing: 0;
+    }
+
+    .ac-result-heading {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .ac-selected-ho {
+      color: var(--ac-brand-dark);
+      font-size: 14px;
+      font-weight: 800;
     }
 
     .ac-note {
@@ -823,11 +851,13 @@
 
       function renderHoBreakdown(data) {
         if (data.input && data.input.floor) floorSelect.value = data.input.floor;
+        var floorData = hasPrefetch(addressInput.value.trim()) ? buildFloorFromPrefetch(data.input.floor) : null;
 
         resultsEl.innerHTML = [
           renderAddressMeta(data),
           '<section class="ac-section">',
-          '<h2 class="ac-section-title">면적 합계</h2>',
+          '<div class="ac-result-heading"><h2 class="ac-section-title">면적 합계</h2>',
+          '<span class="ac-selected-ho">' + esc((data.input && data.input.ho ? data.input.ho : hoInput.value) + "호") + '</span></div>',
           renderSum(data.sum || {}),
           data.ho_matched && data.ho_matched.note ? '<div class="ac-note">' + esc(data.ho_matched.note) + '</div>' : '',
           '</section>',
@@ -835,22 +865,28 @@
           '<h2 class="ac-section-title">전유·공용 breakdown</h2>',
           renderBreakdown(data.breakdown || []),
           '<div class="ac-note">' + esc(data.note || '') + '</div>',
-          '</section>'
+          '</section>',
+          renderStickyHoList(floorData, data.input && data.input.ho)
         ].join("");
+        bindHoChips();
       }
 
       function renderFallback(data) {
         if (data.input && data.input.floor) floorSelect.value = data.input.floor;
+        var floorData = hasPrefetch(addressInput.value.trim()) ? buildFloorFromPrefetch(data.input.floor) : null;
 
         resultsEl.innerHTML = [
           renderAddressMeta(data),
           '<section class="ac-section">',
-          '<h2 class="ac-section-title">면적 결과</h2>',
+          '<div class="ac-result-heading"><h2 class="ac-section-title">면적 결과</h2>',
+          '<span class="ac-selected-ho">' + esc((data.input && data.input.ho ? data.input.ho : hoInput.value) + "호") + '</span></div>',
           renderSum(data.sum || {}),
           data.note ? '<div class="ac-note">' + esc(data.note) + '</div>' : '',
           data.floor_exclusive_note ? '<div class="ac-note">' + esc(data.floor_exclusive_note) + '</div>' : '',
-          '</section>'
+          '</section>',
+          renderStickyHoList(floorData, data.input && data.input.ho)
         ].join("");
+        bindHoChips();
       }
 
       function renderAddressMeta(data) {
@@ -875,11 +911,24 @@
         }).join("") + '</div>';
       }
 
-      function renderHoChips(hoList) {
+      function renderStickyHoList(floorData, activeHo) {
+        if (!floorData) return "";
+        return [
+          '<section class="ac-section">',
+          '<h2 class="ac-section-title">같은 층 호 목록</h2>',
+          renderHoChips(floorData.ho_list || [], activeHo),
+          floorData.ho_list_note ? '<div class="ac-note">' + esc(floorData.ho_list_note) + '</div>' : '',
+          '</section>'
+        ].join("");
+      }
+
+      function renderHoChips(hoList, activeHo) {
         if (!hoList.length) return '<div class="ac-note">조회된 호 목록이 없습니다. 호를 직접 입력해 조회할 수 있습니다.</div>';
+        var activeNorm = normalizeHo(activeHo || hoInput.value);
 
         return '<div class="ac-chip-list">' + hoList.map(function (ho) {
-          return '<button class="ac-chip" type="button" data-ho="' + escAttr(ho) + '">' + esc(ho + "호") + '</button>';
+          var active = activeNorm && normalizeHo(ho) === activeNorm ? " active" : "";
+          return '<button class="ac-chip' + active + '" type="button" data-ho="' + escAttr(ho) + '">' + esc(ho + "호") + '</button>';
         }).join("") + '</div>';
       }
 
