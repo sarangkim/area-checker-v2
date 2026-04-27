@@ -1,0 +1,15 @@
+{
+  "name": "area-checker-v2",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Vercel serverless API for building floor and unit area lookup.",
+  "main": "api/area.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "start": "vercel dev"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "UNLICENSED"
+}
