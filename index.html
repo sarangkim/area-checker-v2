@@ -408,6 +408,7 @@
       var state = {
         floors: [],
         lastAddress: "",
+        prefetch: null,
       };
 
       form.addEventListener("submit", function (event) {
@@ -422,6 +423,7 @@
       resetBtn.addEventListener("click", function () {
         addressInput.value = "";
         hoInput.value = "";
+        state.prefetch = null;
         setFloors([]);
         setStatus("");
         resultsEl.innerHTML = "";
@@ -476,6 +478,7 @@
         try {
           var data = await requestArea({ address: address });
           state.lastAddress = address;
+          state.prefetch = data;
           setFloors(data.floors || []);
           renderSummary(data);
           setStatus("층 목록을 불러왔습니다.");
@@ -492,7 +495,7 @@
         hoInput.value = "";
 
         try {
-          var data = await requestArea({ address: address, floor: floor });
+          var data = hasPrefetch(address) ? buildFloorFromPrefetch(floor) : await requestArea({ address: address, floor: floor });
           renderFloor(data);
           setStatus("층 정보를 불러왔습니다.");
         } catch (error) {
@@ -524,7 +527,9 @@
         setStatus("면적 데이터를 조회하는 중입니다.");
 
         try {
-          var data = await requestArea({ address: address, floor: floor, ho: ho });
+          var data = hasPrefetch(address)
+            ? (ho ? buildHoFromPrefetch(floor, ho) : buildFloorFromPrefetch(floor))
+            : await requestArea({ address: address, floor: floor, ho: ho });
           if (data.mode === "floor") renderFloor(data);
           else if (data.mode === "ho_breakdown") renderHoBreakdown(data);
           else renderFallback(data);
@@ -560,6 +565,231 @@
         searchBtn.disabled = isBusy;
         floorBtn.disabled = isBusy;
       }
+
+      function hasPrefetch(address) {
+        return !!(
+          state.prefetch &&
+          state.lastAddress === address &&
+          state.prefetch.all_data &&
+          Array.isArray(state.prefetch.all_data.floor_items)
+        );
+      }
+
+      function buildFloorFromPrefetch(floor) {
+        var base = state.prefetch || {};
+        var all = base.all_data || {};
+        var floorItems = (all.floor_items || []).filter(function (item) {
+          return sameFloorItem(item, floor);
+        });
+        var pubItems = all.pub_items || [];
+        var exposItems = all.expos_items || [];
+        var hoIndex = buildHoIndex(exposItems, pubItems, floor);
+        var hoList = Object.keys(hoIndex).sort(function (a, b) {
+          return Number(a) - Number(b);
+        });
+        var floorExclusive = findFloorExclusiveFromItems(pubItems, floor);
+
+        return {
+          ok: true,
+          build: base.build,
+          mode: "floor",
+          input: { address: addressInput.value.trim(), floor: floor, ho: null },
+          road: base.road || "",
+          jibun: base.jibun || "",
+          keys: base.keys || {},
+          floor_nos: base.floor_nos || [],
+          floor_items: floorItems.map(toClientFloorItem),
+          ho_list: hoList,
+          ho_list_note: hoList.length ? "" : "해당 층에서 호 목록을 찾지 못했습니다.",
+          ho_index: hoIndex,
+          floor_exclusive_m2: floorExclusive ? floorExclusive.m2 : null,
+          floor_exclusive_pyeong: floorExclusive ? round2(floorExclusive.m2 / 3.305785) : null,
+          floor_exclusive_note: floorExclusive ? floorExclusive.note : null
+        };
+      }
+
+      function buildHoFromPrefetch(floor, ho) {
+        var base = state.prefetch || {};
+        var all = base.all_data || {};
+        var wantHoNorm = normalizeHo(ho);
+        var hoRows = findRowsByFloorAndHo(all.pub_items || [], floor, wantHoNorm);
+
+        if (hoRows.length) {
+          return buildHoBreakdownLocal(base, floor, ho, wantHoNorm, hoRows);
+        }
+
+        var target = findRowsByFloorAndHo(all.expos_items || [], floor, wantHoNorm)[0] || null;
+        var areaM2 = target ? toNumber(target.area) : 0;
+
+        if (areaM2 > 0) {
+          return {
+            ok: true,
+            build: base.build,
+            mode: "exposInfo_fallback",
+            input: { address: addressInput.value.trim(), floor: floor, ho: ho },
+            road: base.road || "",
+            jibun: base.jibun || "",
+            keys: base.keys || {},
+            sum: {
+              exclusive_m2: areaM2,
+              exclusive_pyeong: round2(areaM2 / 3.305785),
+              shared_m2: null,
+              shared_pyeong: null,
+              total_m2: areaM2,
+              total_pyeong: round2(areaM2 / 3.305785)
+            },
+            note: "전유/공용 breakdown 데이터가 없어서 전유부(getBrExposInfo) 면적으로 안내합니다."
+          };
+        }
+
+        var floorExclusive = findFloorExclusiveFromItems(all.pub_items || [], floor);
+        if (floorExclusive) {
+          return {
+            ok: true,
+            build: base.build,
+            mode: "floorExclusive_fallback",
+            input: { address: addressInput.value.trim(), floor: floor, ho: ho },
+            road: base.road || "",
+            jibun: base.jibun || "",
+            keys: base.keys || {},
+            sum: {
+              exclusive_m2: floorExclusive.m2,
+              exclusive_pyeong: round2(floorExclusive.m2 / 3.305785),
+              shared_m2: null,
+              shared_pyeong: null,
+              total_m2: floorExclusive.m2,
+              total_pyeong: round2(floorExclusive.m2 / 3.305785)
+            },
+            note: "해당 호 데이터가 공공API에서 누락되어, 같은 층의 전유 면적으로 안내합니다.",
+            floor_exclusive_note: floorExclusive.note
+          };
+        }
+
+        throw new Error("해당 층/호 면적 데이터를 공공API에서 찾지 못했습니다.");
+      }
+
+      function buildHoIndex(exposItems, pubItems, floor) {
+        var hoIndex = {};
+
+        function addHo(hoNm, source) {
+          var raw = String(hoNm || "").trim();
+          if (!raw) return;
+
+          var expanded = expandHoRange(raw);
+          var norms = expanded.length ? expanded.map(String) : [normalizeHo(raw)].filter(Boolean);
+
+          norms.forEach(function (norm) {
+            if (!hoIndex[norm]) {
+              hoIndex[norm] = {
+                norm: norm,
+                samples: [],
+                hasExclusive: false,
+                exclusive_m2: 0,
+                shared_m2: 0,
+                total_m2: 0,
+                sources: [],
+                mergedFrom: expanded.length >= 2 ? raw : null
+              };
+            }
+            if (hoIndex[norm].sources.indexOf(source) === -1) hoIndex[norm].sources.push(source);
+            if (hoIndex[norm].samples.indexOf(raw) === -1) hoIndex[norm].samples.push(raw);
+            if (!hoIndex[norm].mergedFrom && expanded.length >= 2) hoIndex[norm].mergedFrom = raw;
+          });
+        }
+
+        exposItems.filter(function (item) {
+          return sameFloorItem(item, floor);
+        }).forEach(function (item) {
+          addHo(item.hoNm, "exposInfo");
+        });
+
+        pubItems.filter(function (item) {
+          return sameFloorItem(item, floor);
+        }).forEach(function (item) {
+          addHo(item.hoNm, "pubuseArea");
+
+          var raw = String(item.hoNm || "").trim();
+          var expanded = expandHoRange(raw);
+          var norms = expanded.length ? expanded.map(String) : [normalizeHo(raw)].filter(Boolean);
+          var area = toNumber(item.area);
+
+          norms.forEach(function (norm) {
+            if (!hoIndex[norm]) return;
+            if (isExclusiveItem(item)) {
+              hoIndex[norm].hasExclusive = true;
+              hoIndex[norm].exclusive_m2 += area;
+            }
+            if (isSharedItem(item)) hoIndex[norm].shared_m2 += area;
+          });
+        });
+
+        Object.keys(hoIndex).forEach(function (key) {
+          var item = hoIndex[key];
+          item.exclusive_m2 = round2(item.exclusive_m2);
+          item.shared_m2 = round2(item.shared_m2);
+          item.total_m2 = round2(item.exclusive_m2 + item.shared_m2);
+          item.exclusive_pyeong = item.exclusive_m2 ? round2(item.exclusive_m2 / 3.305785) : null;
+          item.shared_pyeong = item.shared_m2 ? round2(item.shared_m2 / 3.305785) : null;
+          item.total_pyeong = item.total_m2 ? round2(item.total_m2 / 3.305785) : null;
+        });
+
+        return hoIndex;
+      }
+
+      function buildHoBreakdownLocal(base, floor, ho, wantHoNorm, hoRows) {
+        var breakdown = hoRows.map(function (row) {
+          var areaM2 = toNumber(row.area);
+          return {
+            gb: row.exposPubuseGbCdNm || codeToGb(row.exposPubuseGbCd),
+            flrNm: row.flrNoNm || "",
+            use: row.mainPurpsCdNm || row.etcPurps || "",
+            area_m2: areaM2,
+            area_pyeong: round2(areaM2 / 3.305785),
+            raw: { flrNo: row.flrNo || "", hoNm: row.hoNm || "" }
+          };
+        });
+        var exclusiveM2 = round2(hoRows.filter(isExclusiveItem).reduce(function (sum, row) {
+          return sum + toNumber(row.area);
+        }, 0));
+        var sharedM2 = round2(hoRows.filter(isSharedItem).reduce(function (sum, row) {
+          return sum + toNumber(row.area);
+        }, 0));
+        var totalM2 = round2(exclusiveM2 + sharedM2);
+        var samples = unique(hoRows.map(function (row) {
+          return String(row.hoNm || "").trim();
+        }).filter(Boolean));
+        var merged = samples.filter(function (sample) {
+          return expandHoRange(sample).length >= 2;
+        });
+
+        return {
+          ok: true,
+          build: base.build,
+          mode: "ho_breakdown",
+          input: { address: addressInput.value.trim(), floor: floor, ho: ho },
+          road: base.road || "",
+          jibun: base.jibun || "",
+          keys: base.keys || {},
+          ho_matched: {
+            want: ho,
+            wantHoNorm: wantHoNorm,
+            merged: merged.length > 0,
+            matchedHoNm: merged[0] || samples[0] || null,
+            range: merged[0] ? expandHoRange(merged[0]) : null
+          },
+          breakdown: breakdown,
+          sum: {
+            exclusive_m2: exclusiveM2 || null,
+            exclusive_pyeong: exclusiveM2 ? round2(exclusiveM2 / 3.305785) : null,
+            shared_m2: sharedM2 || null,
+            shared_pyeong: sharedM2 ? round2(sharedM2 / 3.305785) : null,
+            total_m2: totalM2 || null,
+            total_pyeong: totalM2 ? round2(totalM2 / 3.305785) : null
+          },
+          note: "주소 조회 시 미리 가져온 데이터 기준으로 호별 전유/공용을 구성했습니다."
+        };
+      }
+
 
       function renderSummary(data) {
         resultsEl.innerHTML = [
@@ -771,6 +1001,148 @@
 
       function escAttr(value) {
         return esc(value).replace(/`/g, "&#096;");
+      }
+
+      function toNumber(value) {
+        var n = Number(String(value || "").trim());
+        return Number.isFinite(n) ? n : 0;
+      }
+
+      function round2(value) {
+        return Number(Number(value || 0).toFixed(2));
+      }
+
+      function normalizeHo(value) {
+        var match = String(value || "").match(/\d+/);
+        return match ? match[0] : "";
+      }
+
+      function normalizeFloor(value) {
+        var match = String(value || "").match(/-?\d+/);
+        return match ? String(Number(match[0])) : "";
+      }
+
+      function parseFloorInput(value) {
+        var raw = String(value || "").trim();
+        var no = normalizeFloor(raw);
+        var gb = null;
+        if (raw.indexOf("지하") !== -1 || /^B/i.test(raw)) gb = "지하";
+        if (raw.indexOf("지상") !== -1 || /^F/i.test(raw)) gb = "지상";
+        return { gb: gb, no: no, key: gb && no ? gb + ":" + no : no };
+      }
+
+      function floorGbFromItem(item) {
+        var code = String(item.flrGbCd || "").trim();
+        var text = String((item.flrGbCdNm || "") + " " + (item.flrNoNm || ""));
+        if (code === "10" || text.indexOf("지하") !== -1 || Number(item.flrNo) < 0) return "지하";
+        if (code === "20" || text.indexOf("지상") !== -1) return "지상";
+        return normalizeFloor(item.flrNo || "") ? "지상" : "";
+      }
+
+      function sameFloorItem(item, floor) {
+        var spec = typeof floor === "object" ? floor : parseFloorInput(floor);
+        if (String(normalizeFloor(item.flrNo || "")) !== String(spec.no || "")) return false;
+        if (!spec.gb) return true;
+        return floorGbFromItem(item) === spec.gb;
+      }
+
+      function expandHoRange(hoNm) {
+        var raw = String(hoNm || "").replace(/\s/g, "").replace(/호/g, "").replace(/[–—−]/g, "-");
+        if (!raw) return [];
+
+        var range = raw.match(/(\d+)\s*[~-]\s*(\d+)/);
+        if (range) {
+          var start = Number(range[1]);
+          var end = Number(range[2]);
+          var out = [];
+          if (start > 0 && end >= start && end - start <= 30) {
+            for (var i = start; i <= end; i += 1) out.push(i);
+            return out;
+          }
+        }
+
+        if (raw.indexOf(",") !== -1) {
+          return raw.split(",").map(function (part) {
+            return Number(part.replace(/[^\d]/g, ""));
+          }).filter(function (n) {
+            return n > 0;
+          });
+        }
+
+        var single = Number(raw.replace(/[^\d]/g, ""));
+        return single ? [single] : [];
+      }
+
+      function hoInMergedHoNm(itemHoNm, wantHoNorm) {
+        var want = Number(String(wantHoNorm || "").replace(/[^\d]/g, ""));
+        if (!want) return false;
+        return expandHoRange(itemHoNm).indexOf(want) !== -1;
+      }
+
+      function findRowsByFloorAndHo(items, floor, wantHoNorm) {
+        var exact = items.filter(function (item) {
+          return sameFloorItem(item, floor) && normalizeHo(item.hoNm || "") === wantHoNorm;
+        });
+        if (exact.length) return exact;
+
+        return items.filter(function (item) {
+          var raw = String(item.hoNm || "").trim();
+          return sameFloorItem(item, floor) && raw && hoInMergedHoNm(raw, wantHoNorm);
+        });
+      }
+
+      function toClientFloorItem(item) {
+        var areaM2 = toNumber(item.area);
+        return {
+          gb: item.flrGbCdNm || "-",
+          use: item.mainPurpsCdNm || "-",
+          detail: item.etcPurps || "-",
+          flrNo: item.flrNo || "",
+          flrNoNm: item.flrNoNm || "",
+          area_m2: areaM2,
+          area_pyeong: round2(areaM2 / 3.305785)
+        };
+      }
+
+      function isExclusiveItem(item) {
+        return String(item.exposPubuseGbCd || "") === "1" || String(item.exposPubuseGbCdNm || "").indexOf("전유") !== -1;
+      }
+
+      function isSharedItem(item) {
+        return String(item.exposPubuseGbCd || "") === "2" || String(item.exposPubuseGbCdNm || "").indexOf("공용") !== -1;
+      }
+
+      function codeToGb(code) {
+        if (String(code || "") === "1") return "전유";
+        if (String(code || "") === "2") return "공용";
+        return String(code || "");
+      }
+
+      function findFloorExclusiveFromItems(pubItems, floor) {
+        var candidates = pubItems.filter(function (item) {
+          if (!sameFloorItem(item, floor)) return false;
+          if (!isExclusiveItem(item)) return false;
+          var hoRaw = String(item.hoNm || "").trim();
+          return !hoRaw || !normalizeHo(hoRaw);
+        }).sort(function (a, b) {
+          return toNumber(b.area) - toNumber(a.area);
+        });
+
+        if (!candidates.length || !toNumber(candidates[0].area)) return null;
+
+        return {
+          m2: toNumber(candidates[0].area),
+          note: "getBrExposPubuseAreaInfo: flrNo=" + (candidates[0].flrNo || "") + ', hoNm="' + (candidates[0].hoNm || "") + '"'
+        };
+      }
+
+      function unique(values) {
+        var seen = {};
+        return values.filter(function (value) {
+          if (seen[value]) return false;
+          seen[value] = true;
+          return true;
+        });
       }
     })();
   </script>

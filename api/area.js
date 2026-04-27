@@ -2,7 +2,7 @@
 // Vercel Serverless Function
 // env: JUSO_KEY, BLD_KEY
 
-const BUILD = "2026-04-27-FLOOR-GB-KEY-01";
+const BUILD = "2026-04-27-PREFETCH-ALL-DATA-01";
 const BLD_PAGE_SIZE = 100;
 const MAX_PAGES = 100;
 const PYEONG_M2 = 3.305785;
@@ -50,6 +50,11 @@ module.exports = async (req, res) => {
     const effectiveFloor = effectiveFloorSpec.key || effectiveFloorSpec.no;
 
     if (!floorRaw && !hoInput) {
+      const [exposItems, pubItems] = await Promise.all([
+        fetchBldItems("getBrExposInfo", keys),
+        fetchBldItems("getBrExposPubuseAreaInfo", keys),
+      ]);
+
       return res.status(200).json({
         ok: true,
         build: BUILD,
@@ -60,6 +65,11 @@ module.exports = async (req, res) => {
         keys,
         floors: floorList,
         floor_nos: floorNos,
+        all_data: {
+          floor_items: flrItems,
+          expos_items: exposItems,
+          pub_items: pubItems,
+        },
       });
     }
 
