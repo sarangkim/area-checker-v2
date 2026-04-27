@@ -545,8 +545,8 @@
 
         state.floors.forEach(function (floor) {
           var option = document.createElement("option");
-          option.value = floor.no;
-          option.textContent = floor.gb + " " + floor.no + "층";
+          option.value = floor.key || floor.no;
+          option.textContent = floor.label || (floor.gb + " " + floor.no + "층");
           floorSelect.appendChild(option);
         });
       }
@@ -639,8 +639,8 @@
         if (!floors.length) return '<div class="ac-note">조회된 층이 없습니다.</div>';
 
         return '<div class="ac-chip-list">' + floors.map(function (floor) {
-          return '<button class="ac-chip" type="button" data-floor="' + escAttr(floor.no) + '">' +
-            esc(floor.gb + " " + floor.no + "층") +
+          return '<button class="ac-chip" type="button" data-floor="' + escAttr(floor.key || floor.no) + '">' +
+            esc(floor.label || (floor.gb + " " + floor.no + "층")) +
             '</button>';
         }).join("") + '</div>';
       }

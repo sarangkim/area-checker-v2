@@ -2,7 +2,7 @@
 // Vercel Serverless Function
 // env: JUSO_KEY, BLD_KEY
 
-const BUILD = "2026-04-27-HO-PAGING-100-ALL-01";
+const BUILD = "2026-04-27-FLOOR-GB-KEY-01";
 const BLD_PAGE_SIZE = 100;
 const MAX_PAGES = 100;
 const PYEONG_M2 = 3.305785;
@@ -40,10 +40,14 @@ module.exports = async (req, res) => {
     const floorList = buildFloorList(flrItems);
     const floorNos = floorList.map((x) => String(x.no));
 
-    const floorNorm = normalizeFloor(floorRaw);
-    const effectiveFloor =
-      floorNorm ||
-      (floorList.find((f) => f.gb === "지상")?.no ?? floorList[0]?.no ?? "");
+    const floorSpec = parseFloorInput(floorRaw);
+    const defaultFloor = floorList.find((f) => f.gb === "\uC9C0\uC0C1") || floorList[0] || null;
+    const effectiveFloorSpec = floorSpec.no
+      ? floorSpec
+      : defaultFloor
+        ? { gb: defaultFloor.gb, no: defaultFloor.no, key: defaultFloor.key }
+        : { gb: null, no: "", key: "" };
+    const effectiveFloor = effectiveFloorSpec.key || effectiveFloorSpec.no;
 
     if (!floorRaw && !hoInput) {
       return res.status(200).json({
@@ -70,7 +74,7 @@ module.exports = async (req, res) => {
     }
 
     if (debug) {
-      const dbg = await debugHoSources(keys, effectiveFloor);
+      const dbg = await debugHoSources(keys, effectiveFloorSpec);
       return res.status(200).json({
         ok: true,
         build: BUILD,
@@ -83,12 +87,12 @@ module.exports = async (req, res) => {
       });
     }
 
-    const floorItems = flrItems.filter((it) => sameFloor(it.flrNo, effectiveFloor));
+    const floorItems = flrItems.filter((it) => sameFloorItem(it, effectiveFloorSpec));
     const pick = pickBestFloorItem(floorItems);
 
     if (!hoInput) {
-      const { hoList, hoNote, hoIndex } = await collectHoListForFloor(keys, effectiveFloor);
-      const floorExclusive = await findFloorExclusiveArea(keys, effectiveFloor);
+      const { hoList, hoNote, hoIndex } = await collectHoListForFloor(keys, effectiveFloorSpec);
+      const floorExclusive = await findFloorExclusiveArea(keys, effectiveFloorSpec);
 
       return res.status(200).json({
         ok: true,
@@ -121,7 +125,7 @@ module.exports = async (req, res) => {
     }
 
     const pubItems = await fetchBldItems("getBrExposPubuseAreaInfo", keys);
-    const hoRows = findRowsByFloorAndHo(pubItems, effectiveFloor, wantHoNorm);
+    const hoRows = findRowsByFloorAndHo(pubItems, effectiveFloorSpec, wantHoNorm);
 
     if (hoRows.length) {
       return res.status(200).json(buildHoBreakdownResponse({
@@ -136,7 +140,7 @@ module.exports = async (req, res) => {
     }
 
     const exposItems = await fetchBldItems("getBrExposInfo", keys);
-    const target = findRowsByFloorAndHo(exposItems, effectiveFloor, wantHoNorm)[0] || null;
+    const target = findRowsByFloorAndHo(exposItems, effectiveFloorSpec, wantHoNorm)[0] || null;
     const areaM2 = target ? toNumber(target.area) : 0;
 
     if (areaM2 > 0) {
@@ -174,7 +178,7 @@ module.exports = async (req, res) => {
       });
     }
 
-    const floorExclusive = await findFloorExclusiveArea(keys, effectiveFloor);
+    const floorExclusive = await findFloorExclusiveArea(keys, effectiveFloorSpec);
 
     if (floorExclusive?.m2) {
       return res.status(200).json({
@@ -332,6 +336,7 @@ function itemXmlToObj(item) {
   const tags = [
     "flrNo",
     "flrNoNm",
+    "flrGbCd",
     "flrGbCdNm",
     "hoNm",
     "dongNm",
@@ -379,8 +384,37 @@ function normalizeFloor(s) {
   return m ? String(Number(m[0])) : "";
 }
 
-function sameFloor(a, b) {
-  return String(normalizeFloor(a)) === String(normalizeFloor(b));
+function parseFloorInput(s) {
+  const raw = String(s || "").trim();
+  const no = normalizeFloor(raw);
+  let gb = null;
+
+  if (raw.includes("\uC9C0\uD558") || /^B/i.test(raw)) gb = "\uC9C0\uD558";
+  if (raw.includes("\uC9C0\uC0C1") || /^F/i.test(raw)) gb = "\uC9C0\uC0C1";
+
+  return { gb, no, key: gb && no ? `${gb}:${no}` : no };
+}
+
+function floorGbFromItem(it) {
+  const code = String(it.flrGbCd || "").trim();
+  const text = `${it.flrGbCdNm || ""} ${it.flrNoNm || ""}`.trim();
+  const flrNo = Number(normalizeFloor(it.flrNo || ""));
+
+  if (code === "10" || text.includes("\uC9C0\uD558") || Number(it.flrNo) < 0) return "\uC9C0\uD558";
+  if (code === "20" || text.includes("\uC9C0\uC0C1")) return "\uC9C0\uC0C1";
+  return flrNo ? "\uC9C0\uC0C1" : "";
+}
+
+function floorLabel(spec) {
+  const s = parseFloorInput(typeof spec === "object" ? spec.key || spec.no : spec);
+  return s.gb && s.no ? `${s.gb} ${s.no}\uCE35` : s.no ? `${s.no}\uCE35` : "";
+}
+
+function sameFloorItem(item, floor) {
+  const spec = typeof floor === "object" ? floor : parseFloorInput(floor);
+  if (String(normalizeFloor(item.flrNo || "")) !== String(spec.no || "")) return false;
+  if (!spec.gb) return true;
+  return floorGbFromItem(item) === spec.gb;
 }
 
 function expandHoRange(hoNm) {
@@ -426,12 +460,12 @@ function hoInMergedHoNm(itemHoNm, wantHoNorm) {
 
 function findRowsByFloorAndHo(items, floor, wantHoNorm) {
   const sameHo = items.filter(
-    (it) => sameFloor(it.flrNo, floor) && normalizeHo(it.hoNm || "") === wantHoNorm
+    (it) => sameFloorItem(it, floor) && normalizeHo(it.hoNm || "") === wantHoNorm
   );
   if (sameHo.length) return sameHo;
 
   return items.filter((it) => {
-    if (!sameFloor(it.flrNo, floor)) return false;
+    if (!sameFloorItem(it, floor)) return false;
     const raw = String(it.hoNm || "").trim();
     return raw ? hoInMergedHoNm(raw, wantHoNorm) : false;
   });
@@ -444,15 +478,17 @@ function buildFloorList(flrItems) {
     const no = normalizeFloor(it.flrNo || "");
     if (!no) continue;
 
-    const gb = (it.flrGbCdNm || "").includes("지하") ? "지하" : "지상";
+    const gb = floorGbFromItem(it) || "\uC9C0\uC0C1";
     const key = `${gb}:${no}`;
 
-    if (!map.has(key)) map.set(key, { gb, no: String(no) });
+    if (!map.has(key)) {
+      map.set(key, { gb, no: String(no), key, label: `${gb} ${no}\uCE35` });
+    }
   }
 
   const arr = [...map.values()];
   arr.sort((a, b) => {
-    if (a.gb !== b.gb) return a.gb === "지하" ? -1 : 1;
+    if (a.gb !== b.gb) return a.gb === "\uC9C0\uD558" ? -1 : 1;
     return Number(a.no) - Number(b.no);
   });
 
@@ -606,7 +642,7 @@ async function collectHoListForFloor(keys, floor) {
   try {
     const exposItems = await fetchBldItems("getBrExposInfo", keys);
     exposItems
-      .filter((it) => sameFloor(it.flrNo, floor))
+      .filter((it) => sameFloorItem(it, floor))
       .forEach((it) => addHo(it.hoNm, "exposInfo"));
   } catch (e) {
     hoNote += `exposInfo 실패: ${e.message} `;
@@ -616,7 +652,7 @@ async function collectHoListForFloor(keys, floor) {
     const pubItems = await fetchBldItems("getBrExposPubuseAreaInfo", keys);
 
     pubItems
-      .filter((it) => sameFloor(it.flrNo, floor))
+      .filter((it) => sameFloorItem(it, floor))
       .forEach((it) => {
         addHo(it.hoNm, "pubuseArea");
 
@@ -665,7 +701,7 @@ async function findFloorExclusiveArea(keys, floor) {
     const pubItems = await fetchBldItems("getBrExposPubuseAreaInfo", keys);
 
     const candidates = pubItems.filter((it) => {
-      if (!sameFloor(it.flrNo, floor)) return false;
+      if (!sameFloorItem(it, floor)) return false;
       if (!isExclusiveItem(it)) return false;
 
       const hoRaw = String(it.hoNm || "").trim();
@@ -701,7 +737,7 @@ async function debugHoSources(keys, floor) {
   for (const api of apis) {
     try {
       const items = await fetchBldItems(api, keys);
-      const floorItems = items.filter((it) => sameFloor(it.flrNo, floor));
+      const floorItems = items.filter((it) => sameFloorItem(it, floor));
 
       out[api] = {
         total: items.length,
