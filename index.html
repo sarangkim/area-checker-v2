@@ -1,0 +1,778 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>건물 층·호 면적 조회</title>
+  <style>
+    :root {
+      --ac-bg: #f6f8f7;
+      --ac-panel: #ffffff;
+      --ac-panel-soft: #eef4f1;
+      --ac-text: #15201c;
+      --ac-muted: #66756f;
+      --ac-line: #cfd9d5;
+      --ac-brand: #167a68;
+      --ac-brand-dark: #0d5c4e;
+      --ac-danger: #a33d35;
+      --ac-warning: #8a6518;
+      --ac-shadow: 0 10px 28px rgba(19, 37, 31, 0.11);
+      --ac-radius: 8px;
+      --ac-font: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+    }
+
+    .area-checker {
+      box-sizing: border-box;
+      width: 100%;
+      max-width: 860px;
+      margin: 24px auto;
+      padding: 0;
+      color: var(--ac-text);
+      font-family: var(--ac-font);
+      line-height: 1.5;
+    }
+
+    .area-checker *,
+    .area-checker *::before,
+    .area-checker *::after {
+      box-sizing: border-box;
+    }
+
+    .ac-shell {
+      overflow: hidden;
+      border: 1px solid var(--ac-line);
+      border-radius: var(--ac-radius);
+      background: var(--ac-panel);
+      box-shadow: var(--ac-shadow);
+    }
+
+    .ac-header {
+      display: grid;
+      gap: 6px;
+      padding: 22px 24px 18px;
+      border-bottom: 1px solid var(--ac-line);
+      background: linear-gradient(180deg, #ffffff 0%, #f0f6f4 100%);
+    }
+
+    .ac-title {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    .ac-subtitle {
+      margin: 0;
+      color: var(--ac-muted);
+      font-size: 14px;
+    }
+
+    .ac-form {
+      display: grid;
+      gap: 14px;
+      padding: 20px 24px;
+      background: var(--ac-panel);
+    }
+
+    .ac-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.5fr) minmax(120px, 0.5fr) minmax(120px, 0.5fr);
+      gap: 10px;
+      align-items: end;
+    }
+
+    .ac-field {
+      display: grid;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .ac-label {
+      color: var(--ac-muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .ac-input,
+    .ac-select {
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid var(--ac-line);
+      border-radius: 6px;
+      background: #ffffff;
+      color: var(--ac-text);
+      font: 15px var(--ac-font);
+      letter-spacing: 0;
+      outline: none;
+      padding: 9px 11px;
+    }
+
+    .ac-input:focus,
+    .ac-select:focus {
+      border-color: var(--ac-brand);
+      box-shadow: 0 0 0 3px rgba(22, 122, 104, 0.14);
+    }
+
+    .ac-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .ac-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      background: var(--ac-brand);
+      color: #ffffff;
+      cursor: pointer;
+      font: 700 14px var(--ac-font);
+      letter-spacing: 0;
+      padding: 9px 14px;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .ac-button:hover {
+      background: var(--ac-brand-dark);
+    }
+
+    .ac-button:disabled {
+      cursor: wait;
+      opacity: 0.62;
+    }
+
+    .ac-button.secondary {
+      border-color: var(--ac-line);
+      background: #ffffff;
+      color: var(--ac-text);
+    }
+
+    .ac-button.secondary:hover {
+      background: var(--ac-panel-soft);
+    }
+
+    .ac-status {
+      min-height: 22px;
+      color: var(--ac-muted);
+      font-size: 13px;
+    }
+
+    .ac-status.error {
+      color: var(--ac-danger);
+      font-weight: 700;
+    }
+
+    .ac-status.warn {
+      color: var(--ac-warning);
+      font-weight: 700;
+    }
+
+    .ac-results {
+      display: grid;
+      gap: 14px;
+      padding: 0 24px 24px;
+      background: var(--ac-panel);
+    }
+
+    .ac-section {
+      display: grid;
+      gap: 10px;
+      padding: 14px;
+      border: 1px solid var(--ac-line);
+      border-radius: var(--ac-radius);
+      background: #ffffff;
+    }
+
+    .ac-section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 0;
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    .ac-meta {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .ac-meta-item {
+      min-width: 0;
+      padding: 10px;
+      border-radius: 6px;
+      background: var(--ac-panel-soft);
+    }
+
+    .ac-meta-label {
+      color: var(--ac-muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .ac-meta-value {
+      overflow-wrap: anywhere;
+      margin-top: 2px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .ac-chip-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .ac-chip {
+      border: 1px solid var(--ac-line);
+      border-radius: 999px;
+      background: #ffffff;
+      color: var(--ac-text);
+      cursor: pointer;
+      font: 700 13px var(--ac-font);
+      padding: 6px 10px;
+    }
+
+    .ac-chip:hover,
+    .ac-chip.active {
+      border-color: var(--ac-brand);
+      background: #e4f3ef;
+      color: var(--ac-brand-dark);
+    }
+
+    .ac-table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--ac-line);
+      border-radius: 6px;
+    }
+
+    .ac-table {
+      width: 100%;
+      min-width: 520px;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .ac-table th,
+    .ac-table td {
+      padding: 9px 10px;
+      border-bottom: 1px solid var(--ac-line);
+      text-align: left;
+      vertical-align: top;
+      white-space: nowrap;
+    }
+
+    .ac-table th {
+      background: var(--ac-panel-soft);
+      color: var(--ac-muted);
+      font-weight: 800;
+    }
+
+    .ac-table tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .ac-number {
+      text-align: right !important;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .ac-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .ac-summary-box {
+      padding: 12px;
+      border-radius: 6px;
+      background: var(--ac-panel-soft);
+    }
+
+    .ac-summary-label {
+      color: var(--ac-muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .ac-summary-value {
+      margin-top: 4px;
+      font-size: 19px;
+      font-weight: 850;
+      letter-spacing: 0;
+    }
+
+    .ac-note {
+      color: var(--ac-muted);
+      font-size: 13px;
+    }
+
+    .ac-hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 720px) {
+      .area-checker {
+        margin: 14px auto;
+      }
+
+      .ac-header,
+      .ac-form,
+      .ac-results {
+        padding-left: 14px;
+        padding-right: 14px;
+      }
+
+      .ac-grid,
+      .ac-meta,
+      .ac-summary-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .ac-title {
+        font-size: 21px;
+      }
+
+      .ac-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="area-checker" id="areaChecker">
+    <div class="ac-shell">
+      <header class="ac-header">
+        <h1 class="ac-title">건물 층·호 면적 조회</h1>
+        <p class="ac-subtitle">도로명주소를 입력한 뒤 층과 호를 선택해 전유·공용 면적을 확인합니다.</p>
+      </header>
+
+      <form class="ac-form" id="acForm">
+        <div class="ac-grid">
+          <label class="ac-field">
+            <span class="ac-label">주소</span>
+            <input class="ac-input" id="acAddress" name="address" autocomplete="street-address" placeholder="예: 서울 중구 세종대로 110">
+          </label>
+
+          <label class="ac-field">
+            <span class="ac-label">층</span>
+            <select class="ac-select" id="acFloor" name="floor">
+              <option value="">주소 조회 후 선택</option>
+            </select>
+          </label>
+
+          <label class="ac-field">
+            <span class="ac-label">호</span>
+            <input class="ac-input" id="acHo" name="ho" inputmode="numeric" placeholder="예: 1306">
+          </label>
+        </div>
+
+        <div class="ac-actions">
+          <button class="ac-button" type="submit" id="acSearchBtn">조회</button>
+          <button class="ac-button secondary" type="button" id="acFloorBtn">층 목록</button>
+          <button class="ac-button secondary" type="button" id="acResetBtn">초기화</button>
+        </div>
+
+        <div class="ac-status" id="acStatus"></div>
+      </form>
+
+      <main class="ac-results" id="acResults"></main>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      var API_BASE = "https://area-checker-v2.vercel.app";
+      var API_PATH = "/api/area";
+
+      var form = document.getElementById("acForm");
+      var addressInput = document.getElementById("acAddress");
+      var floorSelect = document.getElementById("acFloor");
+      var hoInput = document.getElementById("acHo");
+      var searchBtn = document.getElementById("acSearchBtn");
+      var floorBtn = document.getElementById("acFloorBtn");
+      var resetBtn = document.getElementById("acResetBtn");
+      var statusEl = document.getElementById("acStatus");
+      var resultsEl = document.getElementById("acResults");
+
+      var state = {
+        floors: [],
+        lastAddress: "",
+      };
+
+      form.addEventListener("submit", function (event) {
+        event.preventDefault();
+        search();
+      });
+
+      floorBtn.addEventListener("click", function () {
+        loadSummary();
+      });
+
+      resetBtn.addEventListener("click", function () {
+        addressInput.value = "";
+        hoInput.value = "";
+        setFloors([]);
+        setStatus("");
+        resultsEl.innerHTML = "";
+        addressInput.focus();
+      });
+
+      floorSelect.addEventListener("change", function () {
+        if (addressInput.value.trim() && floorSelect.value && !hoInput.value.trim()) {
+          loadFloor(floorSelect.value);
+        }
+      });
+
+      function apiUrl(params) {
+        var url = new URL(API_PATH, API_BASE);
+        Object.keys(params).forEach(function (key) {
+          if (params[key] !== undefined && params[key] !== null && String(params[key]).trim() !== "") {
+            url.searchParams.set(key, String(params[key]).trim());
+          }
+        });
+        return url.toString();
+      }
+
+      async function requestArea(params) {
+        setBusy(true);
+        try {
+          var response = await fetch(apiUrl(params), { method: "GET" });
+          var data = await response.json().catch(function () {
+            return null;
+          });
+
+          if (!response.ok || !data || data.ok === false) {
+            throw new Error((data && data.message) || "조회에 실패했습니다.");
+          }
+
+          return data;
+        } finally {
+          setBusy(false);
+        }
+      }
+
+      async function loadSummary() {
+        var address = addressInput.value.trim();
+        if (!address) {
+          setStatus("주소를 먼저 입력해주세요.", "error");
+          addressInput.focus();
+          return;
+        }
+
+        setStatus("주소와 층 목록을 조회하는 중입니다.");
+        resultsEl.innerHTML = "";
+
+        try {
+          var data = await requestArea({ address: address });
+          state.lastAddress = address;
+          setFloors(data.floors || []);
+          renderSummary(data);
+          setStatus("층 목록을 불러왔습니다.");
+        } catch (error) {
+          setStatus(error.message, "error");
+        }
+      }
+
+      async function loadFloor(floor) {
+        var address = addressInput.value.trim();
+        if (!address || !floor) return;
+
+        setStatus(floor + "층 정보를 조회하는 중입니다.");
+        hoInput.value = "";
+
+        try {
+          var data = await requestArea({ address: address, floor: floor });
+          renderFloor(data);
+          setStatus("층 정보를 불러왔습니다.");
+        } catch (error) {
+          setStatus(error.message, "error");
+        }
+      }
+
+      async function search() {
+        var address = addressInput.value.trim();
+        var floor = floorSelect.value;
+        var ho = hoInput.value.trim();
+
+        if (!address) {
+          setStatus("주소를 입력해주세요.", "error");
+          addressInput.focus();
+          return;
+        }
+
+        if (!floor && !ho) {
+          await loadSummary();
+          return;
+        }
+
+        if (!floor && state.lastAddress !== address) {
+          await loadSummary();
+          floor = floorSelect.value;
+        }
+
+        setStatus("면적 데이터를 조회하는 중입니다.");
+
+        try {
+          var data = await requestArea({ address: address, floor: floor, ho: ho });
+          if (data.mode === "floor") renderFloor(data);
+          else if (data.mode === "ho_breakdown") renderHoBreakdown(data);
+          else renderFallback(data);
+          setStatus("조회가 완료되었습니다.");
+        } catch (error) {
+          setStatus(error.message, "error");
+        }
+      }
+
+      function setFloors(floors) {
+        state.floors = floors || [];
+        floorSelect.innerHTML = "";
+
+        var first = document.createElement("option");
+        first.value = "";
+        first.textContent = state.floors.length ? "층 선택" : "주소 조회 후 선택";
+        floorSelect.appendChild(first);
+
+        state.floors.forEach(function (floor) {
+          var option = document.createElement("option");
+          option.value = floor.no;
+          option.textContent = floor.gb + " " + floor.no + "층";
+          floorSelect.appendChild(option);
+        });
+      }
+
+      function setStatus(message, type) {
+        statusEl.className = "ac-status" + (type ? " " + type : "");
+        statusEl.textContent = message || "";
+      }
+
+      function setBusy(isBusy) {
+        searchBtn.disabled = isBusy;
+        floorBtn.disabled = isBusy;
+      }
+
+      function renderSummary(data) {
+        resultsEl.innerHTML = [
+          renderAddressMeta(data),
+          '<section class="ac-section">',
+          '<h2 class="ac-section-title">층 목록</h2>',
+          renderFloorChips(data.floors || []),
+          '</section>'
+        ].join("");
+        bindFloorChips();
+      }
+
+      function renderFloor(data) {
+        if (data.input && data.input.floor) floorSelect.value = data.input.floor;
+
+        resultsEl.innerHTML = [
+          renderAddressMeta(data),
+          '<section class="ac-section">',
+          '<h2 class="ac-section-title">층 정보</h2>',
+          renderFloorItems(data.floor_items || []),
+          renderFloorExclusive(data),
+          '</section>',
+          '<section class="ac-section">',
+          '<h2 class="ac-section-title">호 목록</h2>',
+          renderHoChips(data.ho_list || []),
+          data.ho_list_note ? '<div class="ac-note">' + esc(data.ho_list_note) + '</div>' : '',
+          '</section>'
+        ].join("");
+        bindHoChips();
+      }
+
+      function renderHoBreakdown(data) {
+        if (data.input && data.input.floor) floorSelect.value = data.input.floor;
+
+        resultsEl.innerHTML = [
+          renderAddressMeta(data),
+          '<section class="ac-section">',
+          '<h2 class="ac-section-title">면적 합계</h2>',
+          renderSum(data.sum || {}),
+          data.ho_matched && data.ho_matched.note ? '<div class="ac-note">' + esc(data.ho_matched.note) + '</div>' : '',
+          '</section>',
+          '<section class="ac-section">',
+          '<h2 class="ac-section-title">전유·공용 breakdown</h2>',
+          renderBreakdown(data.breakdown || []),
+          '<div class="ac-note">' + esc(data.note || '') + '</div>',
+          '</section>'
+        ].join("");
+      }
+
+      function renderFallback(data) {
+        if (data.input && data.input.floor) floorSelect.value = data.input.floor;
+
+        resultsEl.innerHTML = [
+          renderAddressMeta(data),
+          '<section class="ac-section">',
+          '<h2 class="ac-section-title">면적 결과</h2>',
+          renderSum(data.sum || {}),
+          data.note ? '<div class="ac-note">' + esc(data.note) + '</div>' : '',
+          data.floor_exclusive_note ? '<div class="ac-note">' + esc(data.floor_exclusive_note) + '</div>' : '',
+          '</section>'
+        ].join("");
+      }
+
+      function renderAddressMeta(data) {
+        return [
+          '<section class="ac-section">',
+          '<h2 class="ac-section-title">주소</h2>',
+          '<div class="ac-meta">',
+          metaItem("도로명", data.road || "-"),
+          metaItem("지번", data.jibun || "-"),
+          '</div>',
+          '</section>'
+        ].join("");
+      }
+
+      function renderFloorChips(floors) {
+        if (!floors.length) return '<div class="ac-note">조회된 층이 없습니다.</div>';
+
+        return '<div class="ac-chip-list">' + floors.map(function (floor) {
+          return '<button class="ac-chip" type="button" data-floor="' + escAttr(floor.no) + '">' +
+            esc(floor.gb + " " + floor.no + "층") +
+            '</button>';
+        }).join("") + '</div>';
+      }
+
+      function renderHoChips(hoList) {
+        if (!hoList.length) return '<div class="ac-note">조회된 호 목록이 없습니다. 호를 직접 입력해 조회할 수 있습니다.</div>';
+
+        return '<div class="ac-chip-list">' + hoList.map(function (ho) {
+          return '<button class="ac-chip" type="button" data-ho="' + escAttr(ho) + '">' + esc(ho + "호") + '</button>';
+        }).join("") + '</div>';
+      }
+
+      function renderFloorItems(items) {
+        if (!items.length) return '<div class="ac-note">층 면적 항목이 없습니다.</div>';
+
+        return [
+          '<div class="ac-table-wrap"><table class="ac-table">',
+          '<thead><tr><th>구분</th><th>용도</th><th>상세</th><th class="ac-number">m²</th><th class="ac-number">평</th></tr></thead>',
+          '<tbody>',
+          items.map(function (item) {
+            return '<tr>' +
+              '<td>' + esc(item.gb) + '</td>' +
+              '<td>' + esc(item.use) + '</td>' +
+              '<td>' + esc(item.detail) + '</td>' +
+              '<td class="ac-number">' + fmt(item.area_m2) + '</td>' +
+              '<td class="ac-number">' + fmt(item.area_pyeong) + '</td>' +
+              '</tr>';
+          }).join(""),
+          '</tbody></table></div>'
+        ].join("");
+      }
+
+      function renderFloorExclusive(data) {
+        if (!data.floor_exclusive_m2) return "";
+
+        return [
+          '<div class="ac-summary-grid">',
+          summaryBox("층 전유", data.floor_exclusive_m2, "m²"),
+          summaryBox("층 전유", data.floor_exclusive_pyeong, "평"),
+          summaryBox("기준", data.floor_exclusive_note || "-", ""),
+          '</div>'
+        ].join("");
+      }
+
+      function renderSum(sum) {
+        return [
+          '<div class="ac-summary-grid">',
+          summaryBox("전유", sum.exclusive_m2, "m²"),
+          summaryBox("공용", sum.shared_m2, "m²"),
+          summaryBox("합계", sum.total_m2, "m²"),
+          summaryBox("전유", sum.exclusive_pyeong, "평"),
+          summaryBox("공용", sum.shared_pyeong, "평"),
+          summaryBox("합계", sum.total_pyeong, "평"),
+          '</div>'
+        ].join("");
+      }
+
+      function renderBreakdown(rows) {
+        if (!rows.length) return '<div class="ac-note">breakdown 항목이 없습니다.</div>';
+
+        return [
+          '<div class="ac-table-wrap"><table class="ac-table">',
+          '<thead><tr><th>구분</th><th>층</th><th>용도</th><th class="ac-number">m²</th><th class="ac-number">평</th></tr></thead>',
+          '<tbody>',
+          rows.map(function (row) {
+            return '<tr>' +
+              '<td>' + esc(row.gb || "-") + '</td>' +
+              '<td>' + esc(row.flrNm || "-") + '</td>' +
+              '<td>' + esc(row.use || "-") + '</td>' +
+              '<td class="ac-number">' + fmt(row.area_m2) + '</td>' +
+              '<td class="ac-number">' + fmt(row.area_pyeong) + '</td>' +
+              '</tr>';
+          }).join(""),
+          '</tbody></table></div>'
+        ].join("");
+      }
+
+      function bindFloorChips() {
+        resultsEl.querySelectorAll("[data-floor]").forEach(function (button) {
+          button.addEventListener("click", function () {
+            floorSelect.value = button.getAttribute("data-floor");
+            loadFloor(floorSelect.value);
+          });
+        });
+      }
+
+      function bindHoChips() {
+        resultsEl.querySelectorAll("[data-ho]").forEach(function (button) {
+          button.addEventListener("click", function () {
+            hoInput.value = button.getAttribute("data-ho");
+            search();
+          });
+        });
+      }
+
+      function metaItem(label, value) {
+        return '<div class="ac-meta-item"><div class="ac-meta-label">' + esc(label) + '</div><div class="ac-meta-value">' + esc(value) + '</div></div>';
+      }
+
+      function summaryBox(label, value, suffix) {
+        return '<div class="ac-summary-box"><div class="ac-summary-label">' + esc(label) + '</div><div class="ac-summary-value">' + esc(formatValue(value, suffix)) + '</div></div>';
+      }
+
+      function formatValue(value, suffix) {
+        if (value === null || value === undefined || value === "" || value === "-") return "-";
+        if (typeof value === "number") return fmt(value) + (suffix ? " " + suffix : "");
+        return String(value);
+      }
+
+      function fmt(value) {
+        if (value === null || value === undefined || value === "") return "-";
+        var number = Number(value);
+        if (!Number.isFinite(number)) return String(value);
+        return number.toLocaleString("ko-KR", {
+          minimumFractionDigits: number % 1 === 0 ? 0 : 2,
+          maximumFractionDigits: 2
+        });
+      }
+
+      function esc(value) {
+        return String(value == null ? "" : value)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      function escAttr(value) {
+        return esc(value).replace(/`/g, "&#096;");
+      }
+    })();
+  </script>
+</body>
+</html>
